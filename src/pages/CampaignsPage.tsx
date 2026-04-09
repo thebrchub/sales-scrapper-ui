@@ -1,22 +1,20 @@
 import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import { Plus, X } from "lucide-react";
-import { useCampaigns, useCreateCampaign } from "../hooks/useApi";
-import StatusBadge from "../components/StatusBadge";
-import Spinner from "../components/Spinner";
-import ErrorBox from "../components/ErrorBox";
+import { useNavigate } from "react-router-dom";
+import { Plus, X, Search } from "lucide-react";
+import { useCreateCampaign } from "../hooks/useApi";
 import toast from "react-hot-toast";
 
 const SOURCES = ["google_maps", "yelp", "yellow_pages", "google_dorks", "reddit", "new_domains"];
 
 export default function CampaignsPage() {
-  const { data, isLoading, error } = useCampaigns();
   const create = useCreateCampaign();
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [sources, setSources] = useState<string[]>(["google_maps"]);
   const [cities, setCities] = useState("");
   const [categories, setCategories] = useState("");
+  const [campaignId, setCampaignId] = useState("");
 
   function toggleSource(s: string) {
     setSources((prev) =>
@@ -27,7 +25,7 @@ export default function CampaignsPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      await create.mutateAsync({
+      const result = await create.mutateAsync({
         name,
         sources,
         cities: cities.split(",").map((c) => c.trim()).filter(Boolean),
@@ -38,13 +36,18 @@ export default function CampaignsPage() {
       setName("");
       setCities("");
       setCategories("");
+      navigate(`/campaigns/${result.id}`);
     } catch (err) {
       toast.error((err as Error).message);
     }
   }
 
-  if (isLoading) return <Spinner />;
-  if (error) return <ErrorBox message={(error as Error).message} />;
+  function handleLookup(e: FormEvent) {
+    e.preventDefault();
+    if (campaignId.trim()) {
+      navigate(`/campaigns/${campaignId.trim()}`);
+    }
+  }
 
   return (
     <div>
@@ -131,36 +134,24 @@ export default function CampaignsPage() {
         </form>
       )}
 
-      {/* Campaign List */}
-      <div className="space-y-3">
-        {data?.data?.length === 0 && (
-          <p className="text-sm text-text-secondary py-10 text-center">No campaigns yet</p>
-        )}
-        {data?.data?.map((c) => (
-          <Link
-            key={c.id}
-            to={`/campaigns/${c.id}`}
-            className="block rounded-xl border border-border-default bg-surface-card p-4 hover:border-accent-start/30 transition-colors"
+      {/* Campaign Lookup */}
+      <div className="rounded-xl border border-border-default bg-surface-card p-5">
+        <h3 className="text-sm font-medium text-text-secondary mb-3">Look up a Campaign</h3>
+        <form onSubmit={handleLookup} className="flex gap-3">
+          <input
+            value={campaignId}
+            onChange={(e) => setCampaignId(e.target.value)}
+            placeholder="Enter campaign ID"
+            className="flex-1 rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none focus:border-accent-start transition-colors"
+          />
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border-default bg-surface-hover text-sm text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className="font-medium text-text-primary">{c.name}</h3>
-                <p className="text-xs text-text-secondary mt-1">
-                  {c.cities?.join(", ")} &middot; {c.categories?.join(", ")}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <StatusBadge status={c.status} />
-                <span className="text-sm text-text-secondary">
-                  {c.jobs_completed}/{c.jobs_total} jobs
-                </span>
-                <span className="text-sm font-medium text-accent-start">
-                  {c.leads_found} leads
-                </span>
-              </div>
-            </div>
-          </Link>
-        ))}
+            <Search size={16} />
+            View
+          </button>
+        </form>
       </div>
     </div>
   );

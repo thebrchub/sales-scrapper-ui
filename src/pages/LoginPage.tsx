@@ -29,8 +29,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold bg-gradient-to-r from-accent-start to-accent-end bg-clip-text text-transparent">
-            SalesScrapper
+            Leads Generator
           </h1>
+          <p className="text-[10px] text-text-muted mt-1 tracking-wider uppercase">BRC HUB LLP</p>
           <p className="mt-2 text-sm text-text-secondary">Sign in to continue</p>
         </div>
 

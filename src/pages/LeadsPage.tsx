@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Download, Search } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
+import { Download, ExternalLink } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { getExportUrl, getToken } from "../api/client";
 import type { LeadFilters } from "../types";
@@ -14,11 +15,24 @@ export default function LeadsPage() {
   const [filters, setFilters] = useState<LeadFilters>({
     page: 1,
     page_size: 25,
-    sort: "-lead_score",
   });
-  const [search, setSearch] = useState("");
+  const [cityInput, setCityInput] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { data, isLoading, error } = useLeads(filters);
   const updateLead = useUpdateLead();
+
+  // Debounce city filter
+  useEffect(() => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setFilters((prev) => ({
+        ...prev,
+        city: cityInput || undefined,
+        page: 1,
+      }));
+    }, 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [cityInput]);
 
   function handleFilter(key: keyof LeadFilters, value: string) {
     setFilters((prev) => ({
@@ -26,10 +40,6 @@ export default function LeadsPage() {
       [key]: value || undefined,
       page: 1,
     }));
-  }
-
-  function handleSearch() {
-    setFilters((prev) => ({ ...prev, search: search || undefined, page: 1 }));
   }
 
   async function handleStatusChange(id: string, status: string) {
@@ -55,6 +65,7 @@ export default function LeadsPage() {
   if (error) return <ErrorBox message={(error as Error).message} />;
 
   const leads = data?.data || [];
+  const meta = data?.meta;
 
   return (
     <div>
@@ -71,19 +82,6 @@ export default function LeadsPage() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-            placeholder="Search businesses..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-border-default bg-surface-elevated text-sm text-text-primary outline-none focus:border-accent-start transition-colors"
-          />
-        </div>
         <select
           value={filters.status || ""}
           onChange={(e) => handleFilter("status", e.target.value)}
@@ -92,14 +90,13 @@ export default function LeadsPage() {
           <option value="">All Status</option>
           <option value="new">New</option>
           <option value="contacted">Contacted</option>
+          <option value="qualified">Qualified</option>
           <option value="converted">Converted</option>
-          <option value="rejected">Rejected</option>
+          <option value="closed">Closed</option>
         </select>
         <select
           value={filters.score_gte?.toString() || ""}
-          onChange={(e) =>
-            handleFilter("score_gte", e.target.value)
-          }
+          onChange={(e) => handleFilter("score_gte", e.target.value)}
           className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-secondary outline-none cursor-pointer"
         >
           <option value="">All Scores</option>
@@ -108,12 +105,19 @@ export default function LeadsPage() {
           <option value="0">All (0+)</option>
         </select>
         <input
-          value={filters.city || ""}
-          onChange={(e) => handleFilter("city", e.target.value)}
+          value={cityInput}
+          onChange={(e) => setCityInput(e.target.value)}
           placeholder="City"
-          className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none w-32 focus:border-accent-start transition-colors"
+          className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none w-40 focus:border-accent-start transition-colors"
         />
       </div>
+
+      {/* Total count */}
+      {meta && (
+        <p className="text-xs text-text-muted mb-3">
+          {meta.total.toLocaleString()} lead{meta.total !== 1 ? "s" : ""} found
+        </p>
+      )}
 
       {/* Desktop Table */}
       <div className="hidden lg:block rounded-xl border border-border-default bg-surface-card overflow-x-auto">
@@ -137,23 +141,29 @@ export default function LeadsPage() {
                 className="border-b border-border-subtle last:border-0 hover:bg-surface-hover/50 transition-colors"
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium text-text-primary">{lead.business_name}</div>
+                  <Link
+                    to={`/leads/${lead.id}`}
+                    className="font-medium text-text-primary hover:text-accent-start transition-colors"
+                  >
+                    {lead.business_name}
+                  </Link>
                   {lead.website_url && (
                     <a
                       href={lead.website_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-accent-start hover:underline truncate block max-w-[200px]"
+                      className="flex items-center gap-1 text-xs text-accent-start hover:underline truncate max-w-[200px]"
                     >
                       {lead.website_url.replace(/^https?:\/\//, "")}
+                      <ExternalLink size={10} />
                     </a>
                   )}
                 </td>
                 <td className="px-4 py-3 text-text-secondary">
-                  {lead.phone_e164 || <span className="text-text-muted">—</span>}
+                  {lead.phone_e164 || <span className="text-text-muted">--</span>}
                 </td>
                 <td className="px-4 py-3 text-text-secondary truncate max-w-[180px]">
-                  {lead.email || <span className="text-text-muted">—</span>}
+                  {lead.email || <span className="text-text-muted">--</span>}
                 </td>
                 <td className="px-4 py-3 text-text-secondary">{lead.city}</td>
                 <td className="px-4 py-3 text-center">
@@ -168,13 +178,18 @@ export default function LeadsPage() {
                 <td className="px-4 py-3 text-right">
                   <select
                     value={lead.status}
-                    onChange={(e) => handleStatusChange(lead.id, e.target.value)}
+                    onChange={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleStatusChange(lead.id, e.target.value);
+                    }}
                     className="rounded border border-border-default bg-surface-elevated px-2 py-1 text-xs text-text-secondary outline-none cursor-pointer"
                   >
                     <option value="new">new</option>
                     <option value="contacted">contacted</option>
+                    <option value="qualified">qualified</option>
                     <option value="converted">converted</option>
-                    <option value="rejected">rejected</option>
+                    <option value="closed">closed</option>
                   </select>
                 </td>
               </tr>
@@ -193,9 +208,10 @@ export default function LeadsPage() {
       {/* Mobile Card Layout */}
       <div className="lg:hidden space-y-3">
         {leads.map((lead) => (
-          <div
+          <Link
             key={lead.id}
-            className="rounded-xl border border-border-default bg-surface-card p-4"
+            to={`/leads/${lead.id}`}
+            className="block rounded-xl border border-border-default bg-surface-card p-4 hover:border-accent-start/30 transition-colors"
           >
             <div className="flex items-start justify-between mb-2">
               <div>
@@ -216,18 +232,8 @@ export default function LeadsPage() {
             )}
             <div className="flex items-center justify-between mt-3">
               <StatusBadge status={lead.status} />
-              <select
-                value={lead.status}
-                onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                className="rounded border border-border-default bg-surface-elevated px-2 py-1 text-xs text-text-secondary outline-none cursor-pointer"
-              >
-                <option value="new">new</option>
-                <option value="contacted">contacted</option>
-                <option value="converted">converted</option>
-                <option value="rejected">rejected</option>
-              </select>
             </div>
-          </div>
+          </Link>
         ))}
         {leads.length === 0 && (
           <p className="text-sm text-text-secondary text-center py-12">No leads found</p>
@@ -235,8 +241,8 @@ export default function LeadsPage() {
       </div>
 
       <Pagination
-        page={data?.page || 1}
-        totalPages={data?.total_pages || 1}
+        page={meta?.page || 1}
+        totalPages={meta?.totalPages || 1}
         onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
       />
     </div>

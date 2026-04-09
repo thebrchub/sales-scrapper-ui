@@ -10,32 +10,39 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import { useDashboardStats } from "../hooks/useApi";
+import { useLeads } from "../hooks/useApi";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
 
 const SCORE_COLORS = ["#22c55e", "#f59e0b", "#6b7280"];
 
 export default function AnalyticsPage() {
-  const { data, isLoading, error } = useDashboardStats();
+  const { data: allLeads, isLoading, error } = useLeads({ page: 1, page_size: 1 });
+  const { data: hotLeads } = useLeads({ page: 1, page_size: 1, score_gte: 70 });
+  const { data: warmLeads } = useLeads({ page: 1, page_size: 1, score_gte: 40 });
+  const { data: phoneLeads } = useLeads({ page: 1, page_size: 1, has_phone: true });
 
   if (isLoading) return <Spinner />;
   if (error) return <ErrorBox message={(error as Error).message} />;
 
-  const s = data!;
+  const total = allLeads?.meta?.total ?? 0;
+  const hot = hotLeads?.meta?.total ?? 0;
+  const warm = (warmLeads?.meta?.total ?? 0) - hot;
+  const cold = total - hot - warm;
+  const withPhone = phoneLeads?.meta?.total ?? 0;
 
   const scoreData = [
-    { name: "Hot (70+)", value: s.hot_leads },
-    { name: "Warm (40-70)", value: s.warm_leads },
-    { name: "Cold (<40)", value: s.cold_leads },
+    { name: "Hot (70+)", value: hot },
+    { name: "Warm (40-69)", value: warm },
+    { name: "Cold (<40)", value: cold },
   ];
 
   const summaryData = [
-    { name: "Total", value: s.total_leads },
-    { name: "Hot", value: s.hot_leads },
-    { name: "Warm", value: s.warm_leads },
-    { name: "Cold", value: s.cold_leads },
-    { name: "Today", value: s.leads_today },
+    { name: "Total", value: total },
+    { name: "Hot", value: hot },
+    { name: "Warm", value: warm },
+    { name: "Cold", value: cold },
+    { name: "With Phone", value: withPhone },
   ];
 
   return (
@@ -128,21 +135,21 @@ export default function AnalyticsPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <p className="text-2xl font-bold text-text-primary">
-                {s.total_leads.toLocaleString()}
+                {total.toLocaleString()}
               </p>
               <p className="text-xs text-text-secondary mt-1">Total Leads</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-text-primary">{s.total_campaigns}</p>
-              <p className="text-xs text-text-secondary mt-1">Campaigns</p>
+              <p className="text-2xl font-bold text-emerald-400">{hot.toLocaleString()}</p>
+              <p className="text-xs text-text-secondary mt-1">Hot Leads</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-text-primary">{s.avg_score}</p>
-              <p className="text-xs text-text-secondary mt-1">Avg Score</p>
+              <p className="text-2xl font-bold text-amber-400">{warm.toLocaleString()}</p>
+              <p className="text-xs text-text-secondary mt-1">Warm Leads</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-text-primary">{s.dead_jobs}</p>
-              <p className="text-xs text-text-secondary mt-1">Dead Jobs</p>
+              <p className="text-2xl font-bold text-text-primary">{withPhone.toLocaleString()}</p>
+              <p className="text-xs text-text-secondary mt-1">With Phone</p>
             </div>
           </div>
         </div>

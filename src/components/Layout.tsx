@@ -4,11 +4,11 @@ import {
   Megaphone,
   Users,
   BarChart3,
-  AlertTriangle,
   Settings,
   LogOut,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
@@ -18,8 +18,8 @@ const NAV = [
   { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
   { to: "/leads", icon: Users, label: "Leads" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  { to: "/dead-letter", icon: AlertTriangle, label: "Dead Letter" },
   { to: "/settings", icon: Settings, label: "Settings" },
+  { to: "/about", icon: BookOpen, label: "About & Guide" },
 ];
 
 export default function Layout() {
@@ -32,8 +32,9 @@ export default function Layout() {
       <aside className="hidden md:flex flex-col w-60 border-r border-border-default bg-surface-elevated">
         <div className="p-5 border-b border-border-default">
           <h1 className="text-lg font-bold bg-gradient-to-r from-accent-start to-accent-end bg-clip-text text-transparent">
-            SalesScrapper
+            Leads Generator
           </h1>
+          <p className="text-[10px] text-text-muted mt-0.5 tracking-wider uppercase">BRC HUB LLP</p>
         </div>
         <nav className="flex-1 py-4 px-3 space-y-1">
           {NAV.map((item) => (
@@ -68,7 +69,7 @@ export default function Layout() {
       {/* Mobile Top Bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 border-b border-border-default bg-surface-elevated/95 backdrop-blur-sm">
         <h1 className="text-base font-bold bg-gradient-to-r from-accent-start to-accent-end bg-clip-text text-transparent">
-          SalesScrapper
+          Leads Generator
         </h1>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="text-text-secondary">
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}

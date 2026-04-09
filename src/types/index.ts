@@ -4,7 +4,7 @@ export interface Lead {
   category: string;
   phone_e164: string | null;
   phone_valid: boolean;
-  phone_type: string;
+  phone_type: string | null;
   phone_confidence: number;
   email: string | null;
   email_valid: boolean;
@@ -12,15 +12,16 @@ export interface Lead {
   email_disposable: boolean;
   email_confidence: number;
   website_url: string | null;
+  website_domain: string | null;
   address: string | null;
   city: string;
   country: string;
   source: string[];
   lead_score: number;
   tech_stack: Record<string, string> | null;
-  has_ssl: boolean;
-  is_mobile_friendly: boolean;
-  status: "new" | "contacted" | "converted" | "rejected";
+  has_ssl: boolean | null;
+  is_mobile_friendly: boolean | null;
+  status: "new" | "contacted" | "qualified" | "converted" | "closed";
   created_at: string;
   updated_at: string;
 }
@@ -43,8 +44,9 @@ export interface Campaign {
 export interface ScrapeJob {
   id: string;
   source: string;
-  query: string;
-  status: "pending" | "in_progress" | "completed" | "timeout" | "failed" | "dead";
+  city: string;
+  category: string;
+  status: "pending" | "running" | "completed" | "failed" | "dead";
   attempt_count: number;
   max_attempts: number;
   timeout_seconds: number;
@@ -54,45 +56,30 @@ export interface ScrapeJob {
   completed_at: string | null;
   died_at: string | null;
   campaign_id: string;
-  error: string | null;
   created_at: string;
   updated_at: string;
 }
 
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
-  page: number;
-  page_size: number;
-  total: number;
-  total_pages: number;
+  meta: PaginationMeta;
 }
 
 export interface LeadFilters {
   page?: number;
   page_size?: number;
-  sort?: string;
   city?: string;
   status?: string;
   source?: string;
   score_gte?: number;
-  score_lte?: number;
   has_phone?: boolean;
-  has_email?: boolean;
-  phone_valid?: boolean;
-  email_valid?: boolean;
-  search?: string;
-}
-
-export interface DashboardStats {
-  total_leads: number;
-  total_campaigns: number;
-  active_jobs: number;
-  dead_jobs: number;
-  leads_today: number;
-  avg_score: number;
-  hot_leads: number;
-  warm_leads: number;
-  cold_leads: number;
 }
 
 export interface CreateCampaignPayload {
@@ -100,4 +87,5 @@ export interface CreateCampaignPayload {
   sources: string[];
   cities: string[];
   categories: string[];
+  auto_rescrape?: boolean;
 }
