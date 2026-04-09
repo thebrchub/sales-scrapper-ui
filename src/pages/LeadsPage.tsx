@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, ExternalLink, Search } from "lucide-react";
+import { Download, ExternalLink, Search, Users, Filter, Database, ChevronDown } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { getExportUrl, getToken } from "../api/client";
 import type { LeadFilters } from "../types";
@@ -10,6 +10,72 @@ import Pagination from "../components/Pagination";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
 import toast from "react-hot-toast";
+
+// --- CUSTOM PREMIUM DROPDOWN COMPONENT ---
+// This replaces the ugly native OS <select> menus with a fully styled React component
+function CustomDropdown({ 
+  value, 
+  options, 
+  onChange, 
+  placeholder = "Select...", 
+  align = "left",
+  size = "md" 
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (val: string) => void;
+  placeholder?: string;
+  align?: "left" | "right";
+  size?: "md" | "sm";
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
+
+  return (
+    <div className="relative inline-block text-left w-full sm:w-auto">
+      <button
+        type="button"
+        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+        className={`flex items-center justify-between w-full min-w-[130px] rounded-xl border border-white/10 bg-black/50 text-zinc-200 hover:border-accent-start/50 focus:border-accent-start transition-colors outline-none ${
+          size === "sm" ? "px-3 py-1.5 text-xs font-semibold" : "px-4 py-2.5 text-sm font-medium"
+        }`}
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <ChevronDown size={size === "sm" ? 14 : 16} className={`ml-2 shrink-0 text-zinc-500 transition-transform duration-200 ${isOpen ? "rotate-180 text-accent-start" : ""}`} />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Invisible overlay to detect clicks outside the dropdown */}
+          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} />
+          
+          <div className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full mt-2 min-w-[140px] rounded-xl border border-white/10 bg-[#12121a] shadow-2xl z-50 py-1.5 animate-in fade-in slide-in-from-top-2 duration-200`}>
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`flex w-full items-center px-4 py-2 transition-colors ${size === "sm" ? "text-xs" : "text-sm"} ${
+                  value === opt.value
+                    ? "bg-accent-start/15 text-accent-start font-bold border-l-2 border-accent-start"
+                    : "text-zinc-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+// -----------------------------------------
+
 
 export default function LeadsPage() {
   const [filters, setFilters] = useState<LeadFilters>({
@@ -51,218 +117,275 @@ export default function LeadsPage() {
     window.open(getExportUrl(params), "_blank");
   }
 
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <div className="py-20"><Spinner /></div>;
   if (error) return <ErrorBox message={(error as Error).message} />;
 
   const leads = data?.data || [];
   const meta = data?.meta;
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
-        <h2 className="text-xl font-semibold text-text-primary">Leads</h2>
+    <div className="animate-in fade-in duration-500">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
+              <Database size={20} className="text-accent-start" />
+            </div>
+            Lead Database
+          </h2>
+          {meta && (
+            <p className="text-sm text-zinc-400 mt-1.5 ml-14">
+              Showing <strong className="text-white">{meta.total.toLocaleString()}</strong> captured leads
+            </p>
+          )}
+        </div>
         <button
           onClick={handleExport}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border-default bg-surface-card text-sm text-text-secondary hover:bg-surface-hover transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-white/10 bg-white/5 text-sm font-medium text-white hover:bg-white/10 hover:border-white/20 transition-all duration-200 cursor-pointer shadow-lg"
         >
-          <Download size={16} />
+          <Download size={16} className="text-accent-start" />
           Export CSV
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <select
-          value={filters.status || ""}
-          onChange={(e) => handleFilter("status", e.target.value)}
-          className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-secondary outline-none cursor-pointer"
-        >
-          <option value="">All Status</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="qualified">Qualified</option>
-          <option value="converted">Converted</option>
-          <option value="closed">Closed</option>
-        </select>
-        <select
-          value={filters.score_gte?.toString() || ""}
-          onChange={(e) => handleFilter("score_gte", e.target.value)}
-          className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-secondary outline-none cursor-pointer"
-        >
-          <option value="">All Scores</option>
-          <option value="70">Hot (70+)</option>
-          <option value="40">Warm (40+)</option>
-          <option value="0">All (0+)</option>
-        </select>
-        <div className="flex">
-          <input
-            value={cityInput}
-            onChange={(e) => setCityInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyCity()}
-            placeholder="City"
-            className="rounded-l-lg border border-r-0 border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none w-40 focus:border-accent-start transition-colors"
+      {/* Filter Toolbar */}
+      <div className="rounded-2xl border border-white/10 bg-[#09090b]/80 backdrop-blur-xl p-4 mb-6 shadow-xl flex flex-col lg:flex-row lg:items-center gap-4 relative z-20">
+        <div className="flex items-center gap-2 text-zinc-400 shrink-0 hidden lg:flex px-2">
+          <Filter size={16} />
+          <span className="text-xs font-semibold uppercase tracking-wider">Filters</span>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 flex-1">
+          {/* Custom Status Dropdown */}
+          <CustomDropdown 
+            value={filters.status || ""}
+            onChange={(val) => handleFilter("status", val)}
+            placeholder="All Statuses"
+            options={[
+              { value: "", label: "All Statuses" },
+              { value: "new", label: "New" },
+              { value: "contacted", label: "Contacted" },
+              { value: "qualified", label: "Qualified" },
+              { value: "converted", label: "Converted" },
+              { value: "closed", label: "Closed" }
+            ]}
           />
-          <button
-            onClick={applyCity}
-            className="px-2.5 rounded-r-lg border border-border-default bg-surface-hover text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
-            title="Search city"
-          >
-            <Search size={14} />
-          </button>
+          
+          {/* Custom Score Dropdown */}
+          <CustomDropdown 
+            value={filters.score_gte?.toString() || ""}
+            onChange={(val) => handleFilter("score_gte", val)}
+            placeholder="All Scores"
+            options={[
+              { value: "", label: "All Scores" },
+              { value: "70", label: "Hot (70+)" },
+              { value: "40", label: "Warm (40+)" },
+              { value: "0", label: "Cold (All)" }
+            ]}
+          />
+
+          <div className="flex w-full sm:w-auto flex-1 max-w-md">
+            <input
+              value={cityInput}
+              onChange={(e) => setCityInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyCity()}
+              placeholder="Filter by City..."
+              className="w-full rounded-l-xl border border-r-0 border-white/10 bg-black/50 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-accent-start focus:ring-1 focus:ring-accent-start/50 transition-colors"
+            />
+            <button
+              onClick={applyCity}
+              className="px-4 rounded-r-xl border border-white/10 bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-colors cursor-pointer flex items-center justify-center"
+              title="Search city"
+            >
+              <Search size={16} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Total count */}
-      {meta && (
-        <p className="text-xs text-text-muted mb-3">
-          {meta.total.toLocaleString()} lead{meta.total !== 1 ? "s" : ""} found
-        </p>
-      )}
-
-      {/* Desktop Table */}
-      <div className="hidden lg:block rounded-xl border border-border-default bg-surface-card overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border-default">
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">Business</th>
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">Phone</th>
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">Email</th>
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">City</th>
-              <th className="px-4 py-3 text-center text-text-secondary font-medium">Score</th>
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">Status</th>
-              <th className="px-4 py-3 text-left text-text-secondary font-medium">Source</th>
-              <th className="px-4 py-3 text-right text-text-secondary font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map((lead) => (
-              <tr
-                key={lead.id}
-                className="border-b border-border-subtle last:border-0 hover:bg-surface-hover/50 transition-colors"
-              >
-                <td className="px-4 py-3">
-                  <Link
-                    to={`/leads/${lead.id}`}
-                    className="font-medium text-text-primary hover:text-accent-start transition-colors"
-                  >
-                    {lead.business_name}
-                  </Link>
-                  {lead.website_url && (
-                    <a
-                      href={lead.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-accent-start hover:underline truncate max-w-[200px]"
-                    >
-                      {lead.website_url.replace(/^https?:\/\//, "")}
-                      <ExternalLink size={10} />
-                    </a>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-text-secondary">
-                  {lead.phone_e164 || <span className="text-text-muted">--</span>}
-                </td>
-                <td className="px-4 py-3 text-text-secondary truncate max-w-[180px]">
-                  {lead.email || <span className="text-text-muted">--</span>}
-                </td>
-                <td className="px-4 py-3 text-text-secondary">{lead.city}</td>
-                <td className="px-4 py-3 text-center">
-                  <ScoreBadge value={lead.lead_score} />
-                </td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={lead.status} />
-                </td>
-                <td className="px-4 py-3 text-xs">
-                  <div className="flex flex-wrap gap-1">
-                    {lead.source?.map((s) => {
-                      const url = lead.source_urls?.[s];
-                      return url ? (
-                        <a
-                          key={s}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-accent-start hover:underline"
-                        >
-                          {s}
-                          <ExternalLink size={10} />
-                        </a>
-                      ) : (
-                        <span key={s} className="text-text-secondary">{s}</span>
-                      );
-                    })}
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <select
-                    value={lead.status}
-                    onChange={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleStatusChange(lead.id, e.target.value);
-                    }}
-                    className="rounded border border-border-default bg-surface-elevated px-2 py-1 text-xs text-text-secondary outline-none cursor-pointer"
-                  >
-                    <option value="new">new</option>
-                    <option value="contacted">contacted</option>
-                    <option value="qualified">qualified</option>
-                    <option value="converted">converted</option>
-                    <option value="closed">closed</option>
-                  </select>
-                </td>
-              </tr>
-            ))}
-            {leads.length === 0 && (
+      {/* Desktop Data Grid */}
+      <div className="hidden lg:block rounded-2xl border border-white/10 bg-[#09090b] shadow-2xl mb-8">
+        <div className="overflow-x-auto overflow-y-visible pb-24 -mb-24">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-black/60 border-b border-white/10">
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-text-secondary">
-                  No leads found
-                </td>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Business</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Contact</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Location</th>
+                <th className="px-6 py-4 text-center text-xs font-bold uppercase tracking-wider text-zinc-500">Score</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Status</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-zinc-500">Source Links</th>
+                <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-zinc-500">Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {leads.map((lead: any) => (
+                <tr
+                  key={lead.id}
+                  className="hover:bg-white/[0.02] transition-colors duration-150 group"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Link
+                      to={`/leads/${lead.id}`}
+                      className="font-bold text-white hover:text-accent-start transition-colors block mb-1"
+                    >
+                      {lead.business_name}
+                    </Link>
+                    {lead.website_url && (
+                      <a
+                        href={lead.website_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs text-accent-start/80 hover:text-accent-start hover:underline truncate max-w-[200px]"
+                      >
+                        {lead.website_url.replace(/^https?:\/\/(www\.)?/, "")}
+                        <ExternalLink size={10} />
+                      </a>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-zinc-200 font-medium mb-1">{lead.phone_e164 || <span className="text-zinc-700">No Phone</span>}</div>
+                    <div className="text-xs text-zinc-500 truncate max-w-[180px]">{lead.email || <span className="text-zinc-700">No Email</span>}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-zinc-300">
+                    {lead.city}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <ScoreBadge value={lead.lead_score} />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <StatusBadge status={lead.status} />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-2">
+                      {lead.source?.map((s: string) => {
+                        const url = lead.source_urls?.[s];
+                        return url ? (
+                          <a
+                            key={s}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-accent-start hover:bg-accent-start/10 transition-colors"
+                          >
+                            {s.replace(/_/g, " ")}
+                            <ExternalLink size={10} />
+                          </a>
+                        ) : (
+                          <span key={s} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-zinc-500">
+                            {s.replace(/_/g, " ")}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right flex justify-end">
+                    {/* Custom Action Dropdown */}
+                    <CustomDropdown 
+                      value={lead.status}
+                      onChange={(val) => handleStatusChange(lead.id, val)}
+                      size="sm"
+                      align="right"
+                      options={[
+                        { value: "new", label: "New" },
+                        { value: "contacted", label: "Contacted" },
+                        { value: "qualified", label: "Qualified" },
+                        { value: "converted", label: "Converted" },
+                        { value: "closed", label: "Closed" }
+                      ]}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          
+          {leads.length === 0 && (
+            <div className="p-16 text-center border-t border-white/5">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 mx-auto mb-4 flex items-center justify-center">
+                <Search className="text-zinc-500" size={28} />
+              </div>
+              <p className="text-zinc-300 font-bold text-lg">No leads found</p>
+              <p className="text-sm text-zinc-500 mt-1">Try adjusting your filters or search query.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile Card Layout */}
-      <div className="lg:hidden space-y-3">
-        {leads.map((lead) => (
-          <Link
+      <div className="lg:hidden space-y-4 mb-8">
+        {leads.map((lead: any) => (
+          <div
             key={lead.id}
-            to={`/leads/${lead.id}`}
-            className="block rounded-xl border border-border-default bg-surface-card p-4 hover:border-accent-start/30 transition-colors"
+            className="block rounded-2xl border border-white/10 bg-[#09090b] p-5 hover:border-accent-start/40 hover:-translate-y-1 hover:shadow-[0_8px_30px_-12px_rgba(52,211,153,0.2)] transition-all duration-300 relative"
           >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h3 className="font-medium text-text-primary text-sm">
-                  {lead.business_name}
-                </h3>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  {lead.city} &middot; {lead.source?.join(", ")}
+            <Link to={`/leads/${lead.id}`} className="absolute inset-0 z-0" />
+            
+            <div className="relative z-10">
+              <div className="flex items-start justify-between mb-3 pointer-events-none">
+                <div className="pr-4">
+                  <h3 className="font-bold text-white text-lg leading-tight mb-1">
+                    {lead.business_name}
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs font-medium text-zinc-500">
+                    <span className="text-accent-start/80">{lead.city}</span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-700" />
+                    <span>{lead.source?.map((s: string) => s.replace(/_/g, " ")).join(", ")}</span>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  <ScoreBadge value={lead.lead_score} />
+                </div>
+              </div>
+              
+              <div className="bg-black/40 border border-white/5 rounded-xl p-3 mb-4 pointer-events-none">
+                <p className="text-sm text-zinc-200 font-medium mb-1">
+                  {lead.phone_e164 || <span className="text-zinc-600 italic">No phone provided</span>}
+                </p>
+                <p className="text-xs text-zinc-400 truncate">
+                  {lead.email || <span className="text-zinc-600 italic">No email provided</span>}
                 </p>
               </div>
-              <ScoreBadge value={lead.lead_score} />
+
+              <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                <StatusBadge status={lead.status} />
+                
+                {/* Custom Action Dropdown for Mobile */}
+                <CustomDropdown 
+                  value={lead.status}
+                  onChange={(val) => handleStatusChange(lead.id, val)}
+                  size="sm"
+                  align="right"
+                  options={[
+                    { value: "new", label: "Set: New" },
+                    { value: "contacted", label: "Set: Contacted" },
+                    { value: "qualified", label: "Set: Qualified" },
+                    { value: "converted", label: "Set: Converted" },
+                    { value: "closed", label: "Set: Closed" }
+                  ]}
+                />
+              </div>
             </div>
-            {lead.phone_e164 && (
-              <p className="text-xs text-text-secondary">{lead.phone_e164}</p>
-            )}
-            {lead.email && (
-              <p className="text-xs text-text-secondary truncate">{lead.email}</p>
-            )}
-            <div className="flex items-center justify-between mt-3">
-              <StatusBadge status={lead.status} />
-            </div>
-          </Link>
+          </div>
         ))}
         {leads.length === 0 && (
-          <p className="text-sm text-text-secondary text-center py-12">No leads found</p>
+          <div className="rounded-2xl border border-white/10 bg-[#09090b] p-12 text-center">
+             <Search className="text-zinc-500 mx-auto mb-3" size={24} />
+             <p className="text-zinc-400 text-sm">No leads match your filters.</p>
+          </div>
         )}
       </div>
 
-      <Pagination
-        page={meta?.page || 1}
-        totalPages={meta?.totalPages || 1}
-        onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
-      />
+      {/* Pagination Footer */}
+      <div className="flex justify-center pb-4 relative z-10">
+        <Pagination
+          page={meta?.page || 1}
+          totalPages={meta?.totalPages || 1}
+          onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+        />
+      </div>
     </div>
   );
 }
