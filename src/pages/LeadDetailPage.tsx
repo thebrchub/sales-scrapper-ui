@@ -189,7 +189,29 @@ export default function LeadDetailPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
               <p className="text-xs text-text-muted">Sources</p>
-              <p className="text-sm text-text-primary mt-0.5">{lead.source?.join(", ") || "--"}</p>
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {lead.source?.map((s) => {
+                  const url = lead.source_urls?.[s];
+                  return url ? (
+                    <a
+                      key={s}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-hover text-xs text-accent-start hover:underline"
+                    >
+                      {s} <ExternalLink size={10} />
+                    </a>
+                  ) : (
+                    <span
+                      key={s}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-hover text-xs text-text-secondary"
+                    >
+                      {s}
+                    </span>
+                  );
+                }) || "--"}
+              </div>
             </div>
             <div>
               <p className="text-xs text-text-muted">Category</p>
