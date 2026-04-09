@@ -172,8 +172,26 @@ export default function LeadsPage() {
                 <td className="px-4 py-3">
                   <StatusBadge status={lead.status} />
                 </td>
-                <td className="px-4 py-3 text-text-secondary text-xs">
-                  {lead.source?.join(", ")}
+                <td className="px-4 py-3 text-xs">
+                  <div className="flex flex-wrap gap-1">
+                    {lead.source?.map((s) => {
+                      const url = lead.source_urls?.[s];
+                      return url ? (
+                        <a
+                          key={s}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-accent-start hover:underline"
+                        >
+                          {s}
+                          <ExternalLink size={10} />
+                        </a>
+                      ) : (
+                        <span key={s} className="text-text-secondary">{s}</span>
+                      );
+                    })}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <select
