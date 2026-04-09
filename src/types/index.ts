@@ -17,6 +17,7 @@ export interface Lead {
   city: string;
   country: string;
   source: string[];
+  source_urls: Record<string, string> | null;
   lead_score: number;
   tech_stack: Record<string, string> | null;
   has_ssl: boolean | null;
