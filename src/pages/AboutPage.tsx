@@ -1,5 +1,5 @@
 import {
-  BookOpen,
+  
   Search,
   Database,
   BarChart3,
@@ -9,122 +9,145 @@ import {
   Users,
   Zap,
   Shield,
+ 
 } from "lucide-react";
 
 const STEPS = [
   {
     icon: Megaphone,
-    title: "Create a Campaign",
-    description:
-      "Define your target by selecting sources (Google Maps, Yelp, etc.), cities, and business categories. The system generates scrape jobs automatically.",
+    title: "1. Create a Campaign",
+    description: "Select data sources, target cities, and business niches. The system automatically provisions the scraping jobs.",
   },
   {
     icon: Zap,
-    title: "Automated Scraping",
-    description:
-      "The scraping engine pulls jobs from the queue, visits each source, and extracts business data including phone, email, website, and tech stack.",
+    title: "2. Automated Extraction",
+    description: "The engine crawls your selected sources in the background, extracting phones, emails, and website data.",
   },
   {
     icon: Database,
-    title: "Data Processing",
-    description:
-      "Every lead is validated (phone format, email MX check), deduplicated across sources, scored (0-100), and stored in the database.",
+    title: "3. Processing & Scoring",
+    description: "Leads are automatically validated, deduplicated, and scored (0-100) based on data quality and conversion potential.",
   },
   {
     icon: Search,
-    title: "Browse & Filter",
-    description:
-      "Use the Leads page to filter by city, status, or score. Click any lead to see full contact info, tech details, and validation results.",
+    title: "4. Browse & Filter",
+    description: "Use the Lead Database to quickly filter by location, status, or score to find your best targets.",
   },
   {
     icon: BarChart3,
-    title: "Analytics",
-    description:
-      "View lead distribution by score bucket (hot/warm/cold), track totals, and identify the best opportunities at a glance.",
+    title: "5. Pipeline Analytics",
+    description: "Monitor campaign health and identify top-tier opportunities via the visual dashboards.",
   },
   {
     icon: Download,
-    title: "Export",
-    description:
-      "Export filtered leads as CSV. Apply city, status, or score filters before exporting to get exactly the data you need.",
+    title: "6. Export Data",
+    description: "Download perfectly formatted CSVs of your filtered leads, ready for your CRM or outreach tools.",
   },
 ];
 
 const TERMINOLOGY = [
-  { term: "Lead Score", definition: "A 0-100 score based on signals like missing website, outdated tech, no SSL, multi-source presence." },
-  { term: "Hot Lead", definition: "Score 70+. High potential — likely needs your service." },
+  { term: "Lead Score", definition: "A 0-100 rating based on data completeness, web presence, and technology footprint." },
+  { term: "Hot Lead", definition: "Score 70+. High conversion potential — prioritize these." },
   { term: "Warm Lead", definition: "Score 40-69. Moderate potential — worth reaching out." },
-  { term: "Cold Lead", definition: "Score below 40. Lower priority but still stored for reference." },
-  { term: "Campaign", definition: "A batch scraping task combining sources, cities, and categories." },
-  { term: "Source", definition: "Where data is scraped from (Google Maps, Yelp, Yellow Pages, etc.)." },
-  { term: "Deduplication", definition: "Leads with matching phone, email, or domain are merged instead of duplicated." },
-  { term: "E.164", definition: "International phone format (e.g., +14155552671). All phones are normalized to this." },
+  { term: "Cold Lead", definition: "Score <40. Lower priority, missing key contact info." },
+  { term: "Campaign", definition: "A batch extraction task combining specific sources and locations." },
+  { term: "Source", definition: "The data origin (e.g., Google Maps, Yelp, LinkedIn)." },
+  { term: "Deduplication", definition: "Automatic merging of duplicate records found across different sources." },
+  { term: "E.164", definition: "The international phone format (+1234567890) applied to all numbers." },
 ];
 
 export default function AboutPage() {
   return (
-    <div>
-      <div className="flex items-center gap-3 mb-6">
-        <BookOpen className="text-accent-start" size={22} />
-        <h2 className="text-xl font-semibold text-text-primary">About & Guide</h2>
+    <div className="animate-in fade-in duration-500">
+      
+      {/* Page Header */}
+      <div className="mb-8">
+        <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+          {/* <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
+            <BookOpen size={20} className="text-accent-start" />
+          </div> */}
+          About & User Guide
+        </h2>
+        <p className="text-sm text-zinc-400 mt-1.5 ">
+          Everything you need to know to operate the lead generation engine.
+        </p>
       </div>
 
-      {/* About */}
-      <div className="rounded-xl border border-border-default bg-surface-card p-5 mb-6">
-        <h3 className="text-sm font-medium text-text-primary mb-3">About Leads Generator</h3>
-        <p className="text-sm text-text-secondary leading-relaxed">
-          Leads Generator by BRC HUB LLP is an automated lead generation system that scrapes
-          business data from multiple public sources, validates contact information, scores leads
-          by potential, and deduplicates across sources. The system runs a Go API server for data
-          management and a Node.js scraping engine for data extraction, communicating exclusively
-          via Redis queues.
-        </p>
-        <div className="flex items-center gap-4 mt-4">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Shield size={14} />
-            Validated contacts
-          </div>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Users size={14} />
-            Auto-deduplicated
-          </div>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <Settings size={14} />
-            Configurable
+      {/* Hero Overview */}
+      <div className="rounded-3xl border border-white/10 bg-[#09090b] p-6 sm:p-8 mb-8 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent-start/5 blur-[100px] rounded-full pointer-events-none" />
+        
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+            {/* <Info size={20} className="text-accent-start" /> */}
+            Platform Overview
+          </h3>
+          <p className="text-base text-zinc-300 leading-relaxed max-w-4xl">
+            Leads Generator is an automated data extraction engine that pulls business records from multiple public sources. 
+            It automatically validates contact information, scores leads based on conversion potential, and removes 
+            duplicates to provide you with a clean, actionable pipeline.
+          </p>
+          
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-zinc-300 uppercase tracking-wider">
+              <Shield size={14} className="text-accent-start" />
+              Auto-Validated
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-zinc-300 uppercase tracking-wider">
+              <Users size={14} className="text-accent-start" />
+              Deduplicated
+            </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-bold text-zinc-300 uppercase tracking-wider">
+              <Settings size={14} className="text-accent-start" />
+              Highly Configurable
+            </div>
           </div>
         </div>
       </div>
 
-      {/* How It Works */}
-      <h3 className="text-sm font-medium text-text-secondary mb-4">How It Works</h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {STEPS.map((step, i) => (
-          <div
-            key={step.title}
-            className="rounded-xl border border-border-default bg-surface-card p-5 hover:border-accent-start/30 transition-colors"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent-start/15 to-accent-end/15 flex items-center justify-center">
-                <step.icon size={16} className="text-accent-start" />
+      {/* How It Works Grid */}
+      <div className="mb-10">
+        <h3 className="text-lg font-bold text-white mb-5 ml-1">Workflow Guide</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {STEPS.map((step) => (
+            <div
+              key={step.title}
+              className="group rounded-2xl border border-white/10 bg-[#09090b] p-6 hover:border-accent-start/40 hover:-translate-y-1 hover:shadow-[0_8px_30px_-12px_rgba(52,211,153,0.2)] transition-all duration-300 relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-accent-start group-hover:scale-110 duration-500 pointer-events-none">
+                <step.icon size={60} strokeWidth={1.5} />
               </div>
-              <span className="text-xs text-text-muted font-medium">Step {i + 1}</span>
+              
+              <div className="relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center mb-4 group-hover:bg-accent-start/20 transition-colors">
+                  <step.icon size={18} className="text-accent-start" />
+                </div>
+                <h4 className="text-base font-bold text-white mb-2">{step.title}</h4>
+                <p className="text-sm text-zinc-400 leading-relaxed">{step.description}</p>
+              </div>
             </div>
-            <h4 className="text-sm font-medium text-text-primary mb-1.5">{step.title}</h4>
-            <p className="text-xs text-text-secondary leading-relaxed">{step.description}</p>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* Terminology */}
-      <h3 className="text-sm font-medium text-text-secondary mb-4">Terminology</h3>
-      <div className="rounded-xl border border-border-default bg-surface-card divide-y divide-border-subtle">
-        {TERMINOLOGY.map((item) => (
-          <div key={item.term} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
-            <span className="text-sm font-medium text-text-primary w-40 shrink-0">{item.term}</span>
-            <span className="text-xs text-text-secondary">{item.definition}</span>
-          </div>
-        ))}
+      {/* Terminology Dictionary */}
+      <div>
+        <h3 className="text-lg font-bold text-white mb-5 ml-1">Terminology</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {TERMINOLOGY.map((item) => (
+            <div 
+              key={item.term} 
+              className="rounded-xl border border-white/5 bg-black/40 p-4 hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-4">
+                <span className="text-sm font-bold text-accent-start w-32 shrink-0">{item.term}</span>
+                <span className="text-sm text-zinc-300 leading-relaxed">{item.definition}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
+      
     </div>
   );
 }
