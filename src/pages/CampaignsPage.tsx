@@ -18,16 +18,16 @@ import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
 import toast from "react-hot-toast";
 
-const SOURCES = [
-  { id: "google_maps", label: "Google Maps", color: "text-blue-400" },
-  { id: "yelp", label: "Yelp", color: "text-red-400" },
-  { id: "yellow_pages", label: "Yellow Pages", color: "text-amber-400" },
-  { id: "google_dorks", label: "Google Dorks", color: "text-emerald-400" },
-  { id: "reddit", label: "Reddit", color: "text-orange-400" },
-  { id: "new_domains", label: "New Domains", color: "text-purple-400" },
-  { id: "linkedin", label: "LinkedIn", color: "text-sky-400" },
-  { id: "justdial", label: "JustDial", color: "text-yellow-400" },
-];
+// const SOURCES = [
+//   { id: "google_maps", label: "Google Maps", color: "text-blue-400" },
+//   { id: "yelp", label: "Yelp", color: "text-red-400" },
+//   { id: "yellow_pages", label: "Yellow Pages", color: "text-amber-400" },
+//   { id: "google_dorks", label: "Google Dorks", color: "text-emerald-400" },
+//   { id: "reddit", label: "Reddit", color: "text-orange-400" },
+//   { id: "new_domains", label: "New Domains", color: "text-purple-400" },
+//   { id: "linkedin", label: "LinkedIn", color: "text-sky-400" },
+//   { id: "justdial", label: "JustDial", color: "text-yellow-400" },
+// ];
 
 export default function CampaignsPage() {
   const [page, setPage] = useState(1);
@@ -36,17 +36,19 @@ export default function CampaignsPage() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
-  const [sources, setSources] = useState<string[]>(["google_maps"]);
+  // Sources remains hardcoded to ["google_maps"] to pass correctly to the backend
+  const [sources] = useState<string[]>(["google_maps"]);
   const [cities, setCities] = useState("");
   const [categories, setCategories] = useState("");
   const [autoRescrape, setAutoRescrape] = useState(false);
-  const [dropNoContact, setDropNoContact] = useState(false);
+  // Default dropNoContact to true as requested
+  const [dropNoContact, setDropNoContact] = useState(true);
 
-  function toggleSource(s: string) {
-    setSources((prev) =>
-      prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
-    );
-  }
+  // function toggleSource(s: string) {
+  //   setSources((prev) =>
+  //     prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]
+  //   );
+  // }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -65,7 +67,7 @@ export default function CampaignsPage() {
       setCities("");
       setCategories("");
       setAutoRescrape(false);
-      setDropNoContact(false);
+      setDropNoContact(true); // Reset back to true for next time
       navigate(`/campaigns/${result.id}`);
     } catch (err) {
       toast.error((err as Error).message);
@@ -80,9 +82,6 @@ export default function CampaignsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            {/* <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
-              <Megaphone size={20} className="text-accent-start" />
-            </div> */}
             Campaigns
           </h2>
           {meta && (
@@ -120,6 +119,7 @@ export default function CampaignsPage() {
             />
           </div>
 
+          {/* HIDDEN FOR NOW: Data Sources Selection
           <div>
             <label className="block text-sm font-medium text-zinc-300 mb-2">Data Sources</label>
             <div className="flex flex-wrap gap-2.5">
@@ -142,6 +142,7 @@ export default function CampaignsPage() {
               })}
             </div>
           </div>
+          */}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
@@ -173,7 +174,7 @@ export default function CampaignsPage() {
           <div className="flex items-start gap-2.5 mt-2 bg-amber-500/10 border border-amber-500/20 p-3.5 rounded-xl">
             <Info size={16} className="text-amber-400 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-200/80 leading-relaxed">
-              <strong className="text-amber-400 font-semibold">Spelling matters:</strong> The scraper handles upper/lowercase automatically, but it cannot auto-correct spelling mistakes. Please double-check your city and category names to ensure successful lead generation.
+              <strong className="text-amber-400 font-semibold">Important:</strong> Data is currently extracted exclusively via <strong>Google Maps</strong>. The scraper handles upper/lowercase automatically, but it cannot auto-correct spelling mistakes. Please double-check your city and category names to ensure successful lead generation.
             </p>
           </div>
 

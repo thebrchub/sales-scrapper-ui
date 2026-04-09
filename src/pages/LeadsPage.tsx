@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, ExternalLink, Search,  Filter, Database, ChevronDown } from "lucide-react";
+import { Download, ExternalLink, Search,  Filter, ChevronDown } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { getExportUrl, getToken } from "../api/client";
 import type { LeadFilters } from "../types";
@@ -130,13 +130,13 @@ export default function LeadsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
+            {/* <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
               <Database size={20} className="text-accent-start" />
-            </div>
+            </div> */}
             Lead Database
           </h2>
           {meta && (
-            <p className="text-sm text-zinc-400 mt-1.5 ml-14">
+            <p className="text-sm text-zinc-400 mt-1.5 ">
               Showing <strong className="text-white">{meta.total.toLocaleString()}</strong> captured leads
             </p>
           )}
@@ -204,6 +204,17 @@ export default function LeadsPage() {
           </div>
         </div>
       </div>
+
+      {/* NEW: Top Pagination (Only shows if there is more than 1 page) */}
+      {meta && meta.totalPages > 1 && (
+        <div className="flex justify-end mb-4 relative z-10">
+          <Pagination
+            page={meta.page}
+            totalPages={meta.totalPages}
+            onPageChange={(p) => setFilters((prev) => ({ ...prev, page: p }))}
+          />
+        </div>
+      )}
 
       {/* Desktop Data Grid */}
       <div className="hidden lg:block rounded-2xl border border-white/10 bg-[#09090b] shadow-2xl mb-8">
