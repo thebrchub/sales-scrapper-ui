@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, ExternalLink } from "lucide-react";
+import { Download, ExternalLink, Search } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { getExportUrl, getToken } from "../api/client";
 import type { LeadFilters } from "../types";
@@ -17,22 +17,12 @@ export default function LeadsPage() {
     page_size: 25,
   });
   const [cityInput, setCityInput] = useState("");
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { data, isLoading, error } = useLeads(filters);
   const updateLead = useUpdateLead();
 
-  // Debounce city filter
-  useEffect(() => {
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setFilters((prev) => ({
-        ...prev,
-        city: cityInput || undefined,
-        page: 1,
-      }));
-    }, 500);
-    return () => clearTimeout(debounceRef.current);
-  }, [cityInput]);
+  function applyCity() {
+    setFilters((prev) => ({ ...prev, city: cityInput || undefined, page: 1 }));
+  }
 
   function handleFilter(key: keyof LeadFilters, value: string) {
     setFilters((prev) => ({
@@ -104,12 +94,22 @@ export default function LeadsPage() {
           <option value="40">Warm (40+)</option>
           <option value="0">All (0+)</option>
         </select>
-        <input
-          value={cityInput}
-          onChange={(e) => setCityInput(e.target.value)}
-          placeholder="City"
-          className="rounded-lg border border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none w-40 focus:border-accent-start transition-colors"
-        />
+        <div className="flex">
+          <input
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && applyCity()}
+            placeholder="City"
+            className="rounded-l-lg border border-r-0 border-border-default bg-surface-elevated px-3 py-2 text-sm text-text-primary outline-none w-40 focus:border-accent-start transition-colors"
+          />
+          <button
+            onClick={applyCity}
+            className="px-2.5 rounded-r-lg border border-border-default bg-surface-hover text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
+            title="Search city"
+          >
+            <Search size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Total count */}
