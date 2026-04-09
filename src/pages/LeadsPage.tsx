@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Download, ExternalLink, Search, Users, Filter, Database, ChevronDown } from "lucide-react";
+import { Download, ExternalLink, Search,  Filter, Database, ChevronDown } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { getExportUrl, getToken } from "../api/client";
 import type { LeadFilters } from "../types";

@@ -8,7 +8,6 @@ import {
   Users,
   Briefcase,
   Clock,
-  RefreshCw,
   ShieldOff,
   Info
 } from "lucide-react";
