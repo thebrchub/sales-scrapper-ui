@@ -37,6 +37,7 @@ export interface Campaign {
   jobs_completed: number;
   leads_found: number;
   auto_rescrape: boolean;
+  drop_no_contact: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -88,4 +89,5 @@ export interface CreateCampaignPayload {
   cities: string[];
   categories: string[];
   auto_rescrape?: boolean;
+  drop_no_contact?: boolean;
 }

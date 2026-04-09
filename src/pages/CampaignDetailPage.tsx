@@ -74,6 +74,10 @@ export default function CampaignDetailPage() {
             <p className="text-sm text-text-primary mt-0.5">{campaign.auto_rescrape ? "Yes" : "No"}</p>
           </div>
           <div>
+            <p className="text-xs text-text-muted">Drop No-Contact</p>
+            <p className="text-sm text-text-primary mt-0.5">{campaign.drop_no_contact ? "Yes" : "No"}</p>
+          </div>
+          <div>
             <p className="text-xs text-text-muted">Created</p>
             <p className="text-sm text-text-primary mt-0.5">
               {new Date(campaign.created_at).toLocaleDateString()}

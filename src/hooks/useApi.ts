@@ -57,6 +57,16 @@ export function useCampaignStatus(id: string) {
   });
 }
 
+export function useCampaigns(page = 1, pageSize = 20) {
+  return useQuery({
+    queryKey: ["campaigns", page, pageSize],
+    queryFn: () =>
+      api.get<PaginatedResponse<Campaign>>(
+        `/campaigns?page=${page}&page_size=${pageSize}`
+      ),
+  });
+}
+
 export function useCreateCampaign() {
   const qc = useQueryClient();
   return useMutation({
