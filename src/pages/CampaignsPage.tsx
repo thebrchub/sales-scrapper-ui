@@ -25,6 +25,8 @@ const SOURCES = [
   { id: "google_dorks", label: "Google Dorks", color: "text-emerald-400" },
   { id: "reddit", label: "Reddit", color: "text-orange-400" },
   { id: "new_domains", label: "New Domains", color: "text-purple-400" },
+  { id: "linkedin", label: "LinkedIn", color: "text-sky-400" },
+  { id: "justdial", label: "JustDial", color: "text-yellow-400" },
 ];
 
 export default function CampaignsPage() {
