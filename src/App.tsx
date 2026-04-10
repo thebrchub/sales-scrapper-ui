@@ -11,7 +11,7 @@ import CampaignDetailPage from "./pages/CampaignDetailPage";
 import LeadsPage from "./pages/LeadsPage";
 import LeadDetailPage from "./pages/LeadDetailPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
-import SettingsPage from "./pages/SettingsPage";
+// import SettingsPage from "./pages/SettingsPage";
 import AboutPage from "./pages/AboutPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -46,10 +46,11 @@ export default function App() {
             <Route path="leads" element={<LeadsPage />} />
             <Route path="leads/:id" element={<LeadDetailPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            {/* <Route path="settings" element={<SettingsPage />} /> */}
             <Route path="about" element={<AboutPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
+          
         </Routes>
       </AnimatePresence>
     </AuthContext.Provider>
