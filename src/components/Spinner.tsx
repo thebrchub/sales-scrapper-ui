@@ -24,8 +24,9 @@ export default function Spinner() {
   }, []);
 
   return (
-    // Fixed, full-screen overlay for a complete loading page experience
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black animate-in fade-in duration-300">
+    // 👇 FIXED: Removed 'fixed inset-0 bg-black z-50' 
+    // Replaced with 'relative w-full min-h-[70vh]' so it centers inside the page, not the screen!
+    <div className="relative flex flex-col items-center justify-center w-full min-h-[70vh] animate-in fade-in duration-300">
       
       {/* Background ambient glow effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-start/5 blur-[120px] rounded-full pointer-events-none z-0" />

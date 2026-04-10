@@ -56,10 +56,10 @@ export default function AnalyticsPage() {
   ];
 
   // Custom Tooltip component for Recharts to match our glassmorphism theme
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label, isPie }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-black/80 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl">
+        <div className={`bg-black/80 backdrop-blur-md border border-white/10 p-3 rounded-xl shadow-2xl outline-none transition-transform ${isPie ? "-translate-y-16" : ""}`}>
           <p className="text-zinc-400 text-xs font-bold uppercase tracking-wider mb-1">{label || payload[0].name}</p>
           <p className="text-white font-extrabold text-lg">
             {payload[0].value.toLocaleString()} <span className="text-xs font-medium text-zinc-500">leads</span>
@@ -76,9 +76,6 @@ export default function AnalyticsPage() {
       {/* Page Header */}
       <div className="mb-8">
         <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-          {/* <div className="w-10 h-10 rounded-xl bg-accent-start/10 border border-accent-start/20 flex items-center justify-center">
-            <BarChart3 size={20} className="text-accent-start" />
-          </div> */}
           Analytics Overview
         </h2>
         <p className="text-sm text-zinc-400 mt-1.5">
@@ -86,50 +83,88 @@ export default function AnalyticsPage() {
         </p>
       </div>
 
-      {/* KPI Stats Row (Moved to top for better UX hierarchy) */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <div className="rounded-2xl border border-white/10 bg-[#09090b] p-5 relative overflow-hidden group hover:border-accent-start/30 transition-colors">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-accent-start"><Users size={40} /></div>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Total Leads</p>
-          <p className="text-3xl font-black text-white">{total.toLocaleString()}</p>
+      {/* Skeuomorphic KPI Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8">
+        <div className="group relative rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 sm:p-6 overflow-hidden transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_15px_30px_rgba(52,211,153,0.15)] hover:border-accent-start/30 hover:-translate-y-1">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-accent-start pointer-events-none"><Users size={80} strokeWidth={1} /></div>
+          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-accent-start/10 transition-colors">
+                <Users size={16} className="text-accent-start" />
+              </div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Leads</p>
+            </div>
+            <p className="text-3xl font-black text-white">{total.toLocaleString()}</p>
+          </div>
         </div>
         
-        <div className="rounded-2xl border border-white/10 bg-[#09090b] p-5 relative overflow-hidden group hover:border-red-400/30 transition-colors">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-red-400"><Flame size={40} /></div>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Hot Leads</p>
-          <p className="text-3xl font-black text-red-400">{hot.toLocaleString()}</p>
+        <div className="group relative rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 sm:p-6 overflow-hidden transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_15px_30px_rgba(248,113,113,0.15)] hover:border-red-400/30 hover:-translate-y-1">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-red-400 pointer-events-none"><Flame size={80} strokeWidth={1} /></div>
+          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-red-500/10 transition-colors">
+                <Flame size={16} className="text-red-400" />
+              </div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Hot Leads</p>
+            </div>
+            <p className="text-3xl font-black text-red-400">{hot.toLocaleString()}</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#09090b] p-5 relative overflow-hidden group hover:border-amber-400/30 transition-colors">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-amber-400"><Thermometer size={40} /></div>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Warm Leads</p>
-          <p className="text-3xl font-black text-amber-400">{warm.toLocaleString()}</p>
+        <div className="group relative rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 sm:p-6 overflow-hidden transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_15px_30px_rgba(251,191,36,0.15)] hover:border-amber-400/30 hover:-translate-y-1">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-amber-400 pointer-events-none"><Thermometer size={80} strokeWidth={1} /></div>
+          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-amber-500/10 transition-colors">
+                <Thermometer size={16} className="text-amber-400" />
+              </div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Warm Leads</p>
+            </div>
+            <p className="text-3xl font-black text-amber-400">{warm.toLocaleString()}</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#09090b] p-5 relative overflow-hidden group hover:border-blue-400/30 transition-colors">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-blue-400"><Snowflake size={40} /></div>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">Cold Leads</p>
-          <p className="text-3xl font-black text-blue-400">{cold.toLocaleString()}</p>
+        <div className="group relative rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 sm:p-6 overflow-hidden transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_15px_30px_rgba(96,165,250,0.15)] hover:border-blue-400/30 hover:-translate-y-1">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-blue-400 pointer-events-none"><Snowflake size={80} strokeWidth={1} /></div>
+          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-blue-500/10 transition-colors">
+                <Snowflake size={16} className="text-blue-400" />
+              </div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Cold Leads</p>
+            </div>
+            <p className="text-3xl font-black text-blue-400">{cold.toLocaleString()}</p>
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-[#09090b] p-5 relative overflow-hidden group hover:border-accent-start/30 transition-colors col-span-2 lg:col-span-1">
-          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-accent-start"><PhoneCall size={40} /></div>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1">With Phone</p>
-          <p className="text-3xl font-black text-white">{withPhone.toLocaleString()}</p>
+        <div className="group relative rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 sm:p-6 overflow-hidden transition-all duration-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)] hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_15px_30px_rgba(52,211,153,0.15)] hover:border-accent-start/30 hover:-translate-y-1 col-span-2 lg:col-span-1">
+          <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 group-hover:scale-110 transition-all duration-500 text-accent-start pointer-events-none"><PhoneCall size={80} strokeWidth={1} /></div>
+          <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-accent-start/10 transition-colors">
+                <PhoneCall size={16} className="text-accent-start" />
+              </div>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">With Phone</p>
+            </div>
+            <p className="text-3xl font-black text-white">{withPhone.toLocaleString()}</p>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Score Distribution Pie */}
-        <div className="rounded-3xl border border-white/10 bg-[#09090b] p-6 sm:p-8 shadow-2xl lg:col-span-1 flex flex-col">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <PieChartIcon size={18} className="text-accent-start" /> Score Distribution
+        {/* Score Distribution Pie - Skeuomorphic */}
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] lg:col-span-1 flex flex-col">
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center">
+              <PieChartIcon size={18} className="text-accent-start" />
+            </div>
+            Score Distribution
           </h3>
           
-          <div className="h-64 flex-1 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+          <div className="h-64 min-h-[250px] w-full flex-1 relative">
+            <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
+              <PieChart style={{ outline: 'none' }}>
                 <Pie
                   data={scoreData}
                   cx="50%"
@@ -139,12 +174,13 @@ export default function AnalyticsPage() {
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  style={{ outline: 'none' }}
                 >
                   {scoreData.map((_, i) => (
-                    <Cell key={i} fill={SCORE_COLORS[i]} className="drop-shadow-md cursor-pointer hover:opacity-80 transition-opacity" />
+                    <Cell key={i} fill={SCORE_COLORS[i]} className="drop-shadow-md cursor-pointer hover:opacity-80 transition-opacity" style={{ outline: 'none' }} />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'transparent' }} />
+                <Tooltip content={(props) => <CustomTooltip {...props} isPie />} cursor={false} isAnimationActive={false} wrapperStyle={{ outline: 'none' }} />
               </PieChart>
             </ResponsiveContainer>
             
@@ -161,8 +197,8 @@ export default function AnalyticsPage() {
               <div key={d.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span
-                    className="w-3 h-3 rounded-full shadow-lg"
-                    style={{ backgroundColor: SCORE_COLORS[i], boxShadow: `0 0 10px ${SCORE_COLORS[i]}40` }}
+                    className="w-3 h-3 rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.4)]"
+                    style={{ backgroundColor: SCORE_COLORS[i], boxShadow: `inset 0 1px 2px rgba(255,255,255,0.4), 0 0 10px ${SCORE_COLORS[i]}40` }}
                   />
                   <span className="text-sm font-medium text-zinc-300">{d.name}</span>
                 </div>
@@ -172,18 +208,21 @@ export default function AnalyticsPage() {
           </div>
         </div>
 
-        {/* Summary Bar Chart */}
-        <div className="rounded-3xl border border-white/10 bg-[#09090b] p-6 sm:p-8 shadow-2xl lg:col-span-2 flex flex-col relative overflow-hidden">
+        {/* Summary Bar Chart - Skeuomorphic */}
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] lg:col-span-2 flex flex-col relative overflow-hidden">
           {/* Subtle background glow */}
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent-start/5 blur-[100px] rounded-full pointer-events-none" />
 
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 relative z-10">
-            <BarChart3 size={18} className="text-accent-start" /> Pipeline Breakdown
+          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-3 relative z-10">
+            <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center">
+              <BarChart3 size={18} className="text-accent-start" />
+            </div>
+            Pipeline Breakdown
           </h3>
           
           <div className="h-[340px] w-full relative z-10 mt-auto">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={summaryData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height="100%" style={{ outline: 'none' }}>
+              <BarChart data={summaryData} margin={{ top: 20, right: 20, left: -20, bottom: 0 }} style={{ outline: 'none' }}>
                 {/* Custom SVG Gradient for Bars */}
                 <defs>
                   <linearGradient id="colorBar" x1="0" y1="0" x2="0" y2="1">
@@ -195,10 +234,11 @@ export default function AnalyticsPage() {
                 <CartesianGrid strokeDasharray="4 4" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: "#71717a", fontSize: 12, fontWeight: 600 }}
+                  tick={{ fill: "#71717a", fontSize: 11, fontWeight: 600 }}
                   axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
                   tickLine={false}
                   dy={10}
+                  interval={0}
                 />
                 <YAxis
                   tick={{ fill: "#71717a", fontSize: 12, fontWeight: 600 }}
@@ -206,7 +246,7 @@ export default function AnalyticsPage() {
                   tickLine={false}
                   dx={-10}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={false} isAnimationActive={false} wrapperStyle={{ outline: 'none' }} />
                 
                 <Bar 
                   dataKey="value" 
@@ -214,6 +254,7 @@ export default function AnalyticsPage() {
                   radius={[6, 6, 0, 0]} 
                   barSize={40}
                   animationDuration={1500}
+                  style={{ outline: 'none' }}
                 />
               </BarChart>
             </ResponsiveContainer>
