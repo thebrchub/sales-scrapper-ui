@@ -15,12 +15,12 @@ const STEPS = [
   {
     icon: Megaphone,
     title: "1. Create a Campaign",
-    description: "Select data sources, target cities, and business niches. The system automatically provisions the scraping jobs.",
+    description: "Select data sources, target cities, and business niches. The system automatically provisions the data gathering processes.",
   },
   {
     icon: Zap,
-    title: "2. Automated Extraction",
-    description: "The engine crawls your selected sources in the background, extracting phones, emails, and website data.",
+    title: "2. Automated Sourcing",
+    description: "The engine systematically curates data from different sources in the background, gathering phones, emails, and website information.",
   },
   {
     icon: Database,
@@ -49,7 +49,7 @@ const TERMINOLOGY = [
   { term: "Hot Lead", definition: "Score 70+. High conversion potential — prioritize these." },
   { term: "Warm Lead", definition: "Score 40-69. Moderate potential — worth reaching out." },
   { term: "Cold Lead", definition: "Score <40. Lower priority, missing key contact info." },
-  { term: "Campaign", definition: "A batch extraction task combining specific sources and locations." },
+  { term: "Campaign", definition: "A batch data curation task combining specific sources and locations." },
   { term: "Source", definition: "The data origin (e.g., Google Maps, Yelp, LinkedIn)." },
   { term: "Deduplication", definition: "Automatic merging of duplicate records found across different sources." },
   { term: "E.164", definition: "The international phone format (+1234567890) applied to all numbers." },
@@ -79,7 +79,7 @@ export default function AboutPage() {
               Platform Overview
             </h3>
             <p className="text-base text-zinc-300 leading-relaxed">
-              Leads Generator is an automated data extraction engine that pulls business records from multiple public sources. 
+              Leads Generator is an intelligent data aggregation engine that curates business records from multiple public sources. 
               It automatically validates contact information, scores leads based on conversion potential, and removes 
               duplicates to provide you with a clean, actionable pipeline.
             </p>
