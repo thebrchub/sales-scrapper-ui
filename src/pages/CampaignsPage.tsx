@@ -184,7 +184,7 @@ export default function CampaignsPage() {
           <div className="flex items-start gap-2.5 mt-2 bg-[#09090b] border border-amber-500/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] p-4 rounded-xl relative z-10">
             <Info size={16} className="text-amber-400 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
             <p className="text-xs text-amber-200/80 leading-relaxed">
-              <strong className="text-amber-400 font-semibold">Important:</strong> Data is currently extracted exclusively via <strong>Google Maps</strong>. The scraper handles upper/lowercase automatically, but it cannot auto-correct spelling mistakes. Please double-check your city and category names to ensure successful lead generation.
+              <strong className="text-amber-400 font-semibold">Important: The tool handles upper/lowercase automatically, but it cannot auto-correct spelling mistakes. Please double-check your city and category names to ensure successful lead generation.
             </p>
           </div>
 
