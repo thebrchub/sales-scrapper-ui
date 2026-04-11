@@ -20,7 +20,7 @@ const STEPS = [
   {
     icon: Zap,
     title: "2. Automated Sourcing",
-    description: "The engine systematically curates data from different sources in the background, gathering phones, emails, and website information.",
+    description: "The engine systematically curates data from your selected sources in the background, gathering phones, emails, and website information.",
   },
   {
     icon: Database,
@@ -50,7 +50,8 @@ const TERMINOLOGY = [
   { term: "Warm Lead", definition: "Score 40-69. Moderate potential — worth reaching out." },
   { term: "Cold Lead", definition: "Score <40. Lower priority, missing key contact info." },
   { term: "Campaign", definition: "A batch data curation task combining specific sources and locations." },
-  { term: "Source", definition: "The data origin (e.g., Google Maps, Yelp, LinkedIn)." },
+  // 👇 FIXED: Removed specific platform mentions
+  { term: "Source", definition: "The primary public data origin from which business records are aggregated and curated." },
   { term: "Deduplication", definition: "Automatic merging of duplicate records found across different sources." },
   { term: "E.164", definition: "The international phone format (+1234567890) applied to all numbers." },
 ];
