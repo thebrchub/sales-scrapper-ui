@@ -36,6 +36,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* 👇 NEW: Custom Premium Text Selection */
+::selection {
+  background-color: var(--color-accent-start);
+  color: #000000;
+}
+
+::-moz-selection {
+  background-color: var(--color-accent-start);
+  color: #000000;
+}
+
 /* 3. Force inputs and buttons to inherit our premium DM Sans font */
 input, button, textarea, select {
   font-family: inherit;
@@ -74,8 +85,6 @@ h1, h2, h3, h4, h5, h6 {
   from { background-position: 1rem 0; }
   to { background-position: 0 0; }
 }
-
-/* Add to your global index.css file */
 
 /* 1. Counter-Clockwise Rotation */
 @keyframes spin-reverse {
