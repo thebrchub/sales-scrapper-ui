@@ -20,7 +20,7 @@ const NAV = [
   { to: "/leads", icon: Users, label: "Leads" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   // { to: "/settings", icon: Settings, label: "Settings" }, // HIDDEN FOR NOW
-  { to: "/about", icon: BookOpen, label: "About & Guide" },
+  { to: "/about", icon: BookOpen, label: "Overview" },
 ];
 
 export default function Layout() {
