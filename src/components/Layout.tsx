@@ -9,17 +9,36 @@ import {
   X,
   BookOpen,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardList,
+  History,
+  UserCog
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { getUserRole } from "../hooks/useRole";
 
-const NAV = [
+const ADMIN_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
   { to: "/leads", icon: Users, label: "Leads" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  // { to: "/settings", icon: Settings, label: "Settings" }, // HIDDEN FOR NOW
+  { to: "/employees", icon: UserCog, label: "Employees" },
+  { to: "/about", icon: BookOpen, label: "Overview" },
+];
+
+const EMPLOYEE_NAV = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/crm/leads", icon: ClipboardList, label: "My Leads" },
+  { to: "/crm/history", icon: History, label: "History" },
+];
+
+const SUPER_ADMIN_NAV = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
+  { to: "/leads", icon: Users, label: "Leads" },
+  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/admins", icon: UserCog, label: "Admins" },
   { to: "/about", icon: BookOpen, label: "Overview" },
 ];
 
@@ -27,6 +46,13 @@ export default function Layout() {
   const { logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const role = getUserRole();
+
+  const NAV = useMemo(() => {
+    if (role === "employee") return EMPLOYEE_NAV;
+    if (role === "super_admin") return SUPER_ADMIN_NAV;
+    return ADMIN_NAV;
+  }, [role]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-black font-sans text-zinc-100">

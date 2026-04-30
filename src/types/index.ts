@@ -92,3 +92,32 @@ export interface CreateCampaignPayload {
   auto_rescrape?: boolean;
   drop_no_contact?: boolean;
 }
+
+export interface LeadActivity {
+  lead_id: string;
+  business_name: string;
+  phone_e164: string | null;
+  email: string | null;
+  city: string;
+  category: string;
+  website_url: string | null;
+  has_ssl: boolean | null;
+  is_mobile_friendly: boolean | null;
+  source: string[];
+  activity_id: string;
+  status: string;
+  notes: string | null;
+  next_action: string | null;
+  next_follow_up: string | null;
+  last_contact: string | null;
+  updated_at: string;
+}
+
+export interface EmployeeStats {
+  total: number;
+  pending: number;
+  contacted: number;
+  interested: number;
+  converted: number;
+  rejected: number;
+}
