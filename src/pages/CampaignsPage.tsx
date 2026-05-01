@@ -12,11 +12,19 @@ import {
   Info
 } from "lucide-react";
 import { useCampaigns, useCreateCampaign } from "../hooks/useApi";
+import { getUserRole } from "../hooks/useRole";
+import { api } from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import Pagination from "../components/Pagination";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
 import toast from "react-hot-toast";
+
+interface SimpleEmployee {
+  id: string;
+  name: string;
+  email: string;
+}
 
 export default function CampaignsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,6 +65,17 @@ export default function CampaignsPage() {
   const [categories, setCategories] = useState("");
   const [autoRescrape, setAutoRescrape] = useState(false);
   const [dropNoContact, setDropNoContact] = useState(true);
+  const [assignedTo, setAssignedTo] = useState("");
+  const [employees, setEmployees] = useState<SimpleEmployee[]>([]);
+  const role = getUserRole();
+
+  useEffect(() => {
+    if (role === "admin") {
+      api.get<{ data: SimpleEmployee[] }>("/users/employees")
+        .then((res) => setEmployees(res.data || []))
+        .catch(() => {});
+    }
+  }, [role]);
 
   const campaigns = data?.data || [];
   const meta = data?.meta;
@@ -86,14 +105,16 @@ export default function CampaignsPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const result = await create.mutateAsync({
+      const payload: any = {
         name,
         sources,
         cities: cities.split(",").map((c: string) => c.trim()).filter(Boolean),
         categories: categories.split(",").map((c: string) => c.trim()).filter(Boolean),
         auto_rescrape: autoRescrape,
         drop_no_contact: dropNoContact,
-      });
+      };
+      if (assignedTo) payload.assigned_to = assignedTo;
+      const result = await create.mutateAsync(payload);
       toast.success("Campaign created");
       setShowForm(false);
       setName("");
@@ -101,6 +122,7 @@ export default function CampaignsPage() {
       setCategories("");
       setAutoRescrape(false);
       setDropNoContact(true);
+      setAssignedTo("");
       navigate(`/campaigns/${result.id}`);
     } catch (err) {
       toast.error((err as Error).message);
@@ -179,6 +201,28 @@ export default function CampaignsPage() {
               />
             </div>
           </div>
+
+          {/* Assign to Employee (admin only) */}
+          {role === "admin" && employees.length > 0 && (
+            <div className="relative z-10">
+              <label className="block text-sm font-bold text-zinc-300 mb-2">
+                Assign to Employee <span className="text-zinc-500 font-normal ml-1">(optional)</span>
+              </label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all appearance-none"
+                style={{ colorScheme: "dark" }}
+              >
+                <option value="">-- Unassigned --</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({emp.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Warning Banner - Recessed */}
           <div className="flex items-start gap-2.5 mt-2 bg-[#09090b] border border-amber-500/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] p-4 rounded-xl relative z-10">

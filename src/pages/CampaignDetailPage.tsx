@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
   ArrowLeft, 
@@ -10,16 +11,58 @@ import {
   Users, 
   Activity,
   Target,
-  Settings
+  Settings,
+  UserCheck
 } from "lucide-react";
 import { useCampaignStatus } from "../hooks/useApi";
+import { getUserRole } from "../hooks/useRole";
+import { api } from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
+import toast from "react-hot-toast";
+
+interface SimpleEmployee {
+  id: string;
+  name: string;
+  email: string;
+}
 
 export default function CampaignDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { data: campaign, isLoading, error } = useCampaignStatus(id!);
+  const { data: campaign, isLoading, error, refetch } = useCampaignStatus(id!);
+  const role = getUserRole();
+  const [employees, setEmployees] = useState<SimpleEmployee[]>([]);
+  const [assignedTo, setAssignedTo] = useState("");
+  const [assigning, setAssigning] = useState(false);
+
+  useEffect(() => {
+    if (role === "admin") {
+      api.get<{ data: SimpleEmployee[] }>("/users/employees")
+        .then((res) => setEmployees(res.data || []))
+        .catch(() => {});
+    }
+  }, [role]);
+
+  useEffect(() => {
+    if (campaign?.assigned_to) {
+      setAssignedTo(campaign.assigned_to);
+    }
+  }, [campaign?.assigned_to]);
+
+  async function handleAssign() {
+    if (!assignedTo || !id) return;
+    setAssigning(true);
+    try {
+      await api.patch(`/campaigns/${id}/assign`, { assigned_to: assignedTo });
+      toast.success("Campaign assigned successfully");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to assign");
+    } finally {
+      setAssigning(false);
+    }
+  }
 
   if (isLoading) return <div className="py-20"><Spinner /></div>;
   if (error) return <ErrorBox message={(error as Error).message} />;
@@ -210,6 +253,48 @@ export default function CampaignDetailPage() {
 
         </div>
       </div>
+
+      {/* Assign to Employee - Admin Only */}
+      {role === "admin" && employees.length > 0 && (
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 mt-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)]">
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center">
+              <UserCheck size={18} className="text-accent-start" />
+            </div>
+            Assign to Employee
+          </h3>
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
+            <div className="flex-1 w-full sm:w-auto">
+              <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Employee</label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all appearance-none"
+                style={{ colorScheme: "dark" }}
+              >
+                <option value="">-- Select Employee --</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({emp.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleAssign}
+              disabled={!assignedTo || assigning}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-accent-start to-accent-end text-sm font-extrabold text-zinc-950 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_16px_rgba(52,211,153,0.3)] transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            >
+              {assigning ? "Assigning..." : "Assign Campaign"}
+            </button>
+          </div>
+          {campaign?.assigned_to && (
+            <p className="mt-4 text-xs text-zinc-500">
+              Currently assigned to: <span className="text-zinc-300 font-medium">{employees.find(e => e.id === campaign.assigned_to)?.name || campaign.assigned_to}</span>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

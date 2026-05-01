@@ -23,6 +23,8 @@ export interface Lead {
   has_ssl: boolean | null;
   is_mobile_friendly: boolean | null;
   status: "new" | "contacted" | "qualified" | "converted" | "closed";
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +41,7 @@ export interface Campaign {
   leads_found: number;
   auto_rescrape: boolean;
   drop_no_contact: boolean;
+  assigned_to?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -91,4 +94,34 @@ export interface CreateCampaignPayload {
   categories: string[];
   auto_rescrape?: boolean;
   drop_no_contact?: boolean;
+}
+
+export interface LeadActivity {
+  lead_id: string;
+  business_name: string;
+  phone_e164: string | null;
+  email: string | null;
+  city: string;
+  category: string;
+  website_url: string | null;
+  has_ssl: boolean | null;
+  is_mobile_friendly: boolean | null;
+  source: string[];
+  activity_id: string;
+  status: string;
+  notes: string | null;
+  next_action: string | null;
+  next_follow_up: string | null;
+  last_contact: string | null;
+  updated_at: string;
+}
+
+export interface EmployeeStats {
+  employee_id: string;
+  employee_name: string;
+  total_leads: number;
+  contacted: number;
+  conversions: number;
+  overdue_follow_ups: number;
+  activity_this_week: number;
 }
