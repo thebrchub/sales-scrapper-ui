@@ -127,7 +127,7 @@ export default function AboutPage() {
       </div>
 
       {/* How It Works Grid - Soft Skeuomorphic Cards */}
-      <div className="mb-12">
+      {role !== "employee" && <div className="mb-12">
         <h3 className="text-lg font-bold text-white mb-5 ml-1">Workflow Guide</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {STEPS.map((step) => (
@@ -150,7 +150,7 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Terminology Dictionary - Soft Skeuomorphic List */}
       <div>
