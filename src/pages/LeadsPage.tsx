@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Download, ExternalLink, Search, Filter, Database, ChevronDown, FastForward, UserPlus } from "lucide-react";
+import { Download, ExternalLink, Search, Filter, ChevronDown, FastForward, UserPlus, Phone, Mail } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { api, getExportUrl, getToken } from "../api/client";
 import { getUserRole } from "../hooks/useRole";
@@ -10,6 +10,7 @@ import ScoreBadge from "../components/ScoreBadge";
 import Pagination from "../components/Pagination";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
+import Tooltip from "../components/Tooltip";
 import toast from "react-hot-toast";
 
 // --- CUSTOM PREMIUM DROPDOWN COMPONENT (Skeuomorphic) ---
@@ -245,7 +246,7 @@ export default function LeadsPage() {
     sessionStorage.setItem("lastVisitedLead", id);
   }
 
-  if (isLoading) return <div className="py-20"><Spinner /></div>;
+  if (isLoading) return <Spinner />;
   if (error) return <ErrorBox message={(error as Error).message} />;
 
   const paginationControls = (
@@ -292,15 +293,11 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-            {/* Skeuomorphic Icon Button */}
-            <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center">
-              <Database size={18} className="text-accent-start" />
-            </div>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white">
             Lead Database
           </h2>
           {meta && (
-            <p className="text-sm text-zinc-400 mt-1.5 ml-14">
+            <p className="text-sm text-zinc-400 mt-1.5">
               Showing <strong className="text-white">{meta.total.toLocaleString()}</strong> captured leads
             </p>
           )}
@@ -360,10 +357,11 @@ export default function LeadsPage() {
             />
             <button
               onClick={applyCity}
-              className="px-3 py-2 rounded-lg bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_4px_rgba(0,0,0,0.3)] text-zinc-400 hover:text-accent-start transition-colors cursor-pointer flex items-center justify-center"
-              title="Search city"
+              className="group relative px-3 py-2 rounded-lg bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_4px_rgba(0,0,0,0.3)] text-zinc-400 hover:text-accent-start transition-colors cursor-pointer flex items-center justify-center"
+              aria-label="Search city"
             >
               <Search size={16} />
+              <Tooltip label="Search city" />
             </button>
           </div>
         </div>
@@ -494,8 +492,24 @@ export default function LeadsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-zinc-200 font-bold mb-1">{lead.phone_e164 || <span className="text-zinc-700 font-medium">No Phone</span>}</div>
-                      <div className="text-xs text-zinc-500 font-medium truncate max-w-[180px]">{lead.email || <span className="text-zinc-700">No Email</span>}</div>
+                      <div className="mb-1">
+                        {lead.phone_e164 ? (
+                          <a href={`tel:${lead.phone_e164}`} className="inline-flex items-center gap-1.5 text-zinc-200 hover:text-cyan-400 font-bold transition-colors">
+                            <Phone size={12} /> {lead.phone_e164}
+                          </a>
+                        ) : (
+                          <span className="text-zinc-700 font-medium">No Phone</span>
+                        )}
+                      </div>
+                      <div className="text-xs font-medium truncate max-w-[180px]">
+                        {lead.email ? (
+                          <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-orange-400 transition-colors">
+                            <Mail size={11} /> {lead.email}
+                          </a>
+                        ) : (
+                          <span className="text-zinc-700">No Email</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-zinc-300 font-medium">
                       {lead.city}
@@ -613,12 +627,24 @@ export default function LeadsPage() {
                 </div>
                 
                 {/* Recessed Contact Box */}
-                <div className="bg-[#09090b] border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] rounded-xl p-4 mb-5 pointer-events-none">
+                <div className="bg-[#09090b] border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] rounded-xl p-4 mb-5">
                   <p className="text-sm text-zinc-200 font-bold mb-1">
-                    {lead.phone_e164 || <span className="text-zinc-600 italic font-medium">No phone provided</span>}
+                    {lead.phone_e164 ? (
+                      <a href={`tel:${lead.phone_e164}`} className="inline-flex items-center gap-1.5 hover:text-cyan-400 transition-colors">
+                        <Phone size={13} /> {lead.phone_e164}
+                      </a>
+                    ) : (
+                      <span className="text-zinc-600 italic font-medium">No phone provided</span>
+                    )}
                   </p>
                   <p className="text-xs text-zinc-400 font-medium truncate">
-                    {lead.email || <span className="text-zinc-600 italic">No email provided</span>}
+                    {lead.email ? (
+                      <a href={`mailto:${lead.email}`} className="inline-flex items-center gap-1.5 hover:text-orange-400 transition-colors">
+                        <Mail size={12} /> {lead.email}
+                      </a>
+                    ) : (
+                      <span className="text-zinc-600 italic">No email provided</span>
+                    )}
                   </p>
                 </div>
 

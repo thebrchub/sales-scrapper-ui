@@ -17,6 +17,7 @@ import {
 import { useState, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { getUserRole } from "../hooks/useRole";
+import Tooltip from "./Tooltip";
 
 const ADMIN_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -111,9 +112,7 @@ export default function Layout() {
               
               {/* Skeuomorphic Floating Tooltip */}
               {isCollapsed && (
-                <span className="absolute left-full ml-4 px-3 py-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_10px_20px_rgba(0,0,0,0.8)] text-white text-xs font-extrabold tracking-wide rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap pointer-events-none">
-                  {item.label}
-                </span>
+                <Tooltip label={item.label} side="right" />
               )}
             </NavLink>
           ))}
@@ -130,9 +129,7 @@ export default function Layout() {
             <LogOut size={20} className="shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
             {!isCollapsed && <span>Logout</span>}
             {isCollapsed && (
-              <span className="absolute left-full ml-4 px-3 py-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_10px_20px_rgba(0,0,0,0.8)] text-red-400 text-xs font-extrabold tracking-wide rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap pointer-events-none">
-                Logout
-              </span>
+              <Tooltip label="Logout" side="right" tone="danger" />
             )}
           </button>
         </div>

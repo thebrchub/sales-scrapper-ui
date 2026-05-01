@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
-import { Loader2, Plus, UserPlus, Pencil, UserX, Check, X, KeyRound } from "lucide-react";
+import { Plus, UserPlus, Pencil, UserX, Check, X, KeyRound } from "lucide-react";
+import Spinner from "../components/Spinner";
+import PasswordInput from "../components/PasswordInput";
+import Tooltip from "../components/Tooltip";
 
 interface Employee {
   id: string;
@@ -86,23 +89,19 @@ export default function EmployeeManagementPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-orange-500" size={32} />
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="min-h-[calc(100vh-8rem)] w-full animate-in fade-in duration-500 flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Employees</h1>
-          <p className="text-zinc-400 text-sm mt-1">Manage your team members</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Employees</h1>
+          <p className="text-zinc-400 text-sm mt-1.5">Manage your team members</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded-lg transition-colors"
+          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-colors"
         >
           {showForm ? <Plus size={16} className="rotate-45" /> : <UserPlus size={16} />}
           {showForm ? "Cancel" : "Add Employee"}
@@ -117,10 +116,10 @@ export default function EmployeeManagementPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleCreate} className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6 space-y-4">
+        <form onSubmit={handleCreate} className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)]">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Name</label>
+              <label className="text-sm text-zinc-400 block mb-1">Name</label>
               <input
                 type="text"
                 required
@@ -130,7 +129,7 @@ export default function EmployeeManagementPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Email</label>
+              <label className="text-sm text-zinc-400 block mb-1">Email</label>
               <input
                 type="email"
                 required
@@ -140,13 +139,12 @@ export default function EmployeeManagementPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-zinc-500 block mb-1">Password</label>
-              <input
-                type="password"
+              <label className="text-sm text-zinc-400 block mb-1">Password</label>
+              <PasswordInput
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
+                inputClassName="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
               />
             </div>
           </div>
@@ -160,91 +158,96 @@ export default function EmployeeManagementPage() {
         </form>
       )}
 
-      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-white/5 text-zinc-400 text-left">
-              <th className="px-4 py-3 font-medium">Name</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Created</th>
-              <th className="px-4 py-3 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((emp) => (
-              <tr key={emp.id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-medium text-white">
-                  {editingId === emp.id ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-500/50 w-32"
-                      />
-                      <button onClick={() => handleUpdate(emp.id)} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
-                      <button onClick={() => setEditingId(null)} className="text-zinc-500 hover:text-zinc-300"><X size={14} /></button>
-                    </div>
-                  ) : (
-                    emp.name
-                  )}
-                </td>
-                <td className="px-4 py-3 text-zinc-300">{emp.email}</td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${emp.is_active !== false ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
-                    {emp.is_active !== false ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-zinc-400 text-xs">{new Date(emp.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => { setEditingId(emp.id); setEditName(emp.name); }}
-                      className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
-                      title="Edit name"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => { setPasswordId(passwordId === emp.id ? null : emp.id); setNewPassword(""); }}
-                      className={`p-1.5 rounded-lg transition-colors ${passwordId === emp.id ? "text-orange-400 bg-orange-500/10" : "text-zinc-500 hover:text-orange-400 hover:bg-orange-500/10"}`}
-                      title="Change password"
-                    >
-                      <KeyRound size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleToggleActive(emp)}
-                      className={`p-1.5 rounded-lg transition-colors ${emp.is_active !== false ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10" : "text-zinc-500 hover:text-green-400 hover:bg-green-500/10"}`}
-                      title={emp.is_active !== false ? "Block" : "Unblock"}
-                    >
-                      <UserX size={14} />
-                    </button>
-                  </div>
-                  {passwordId === emp.id && (
-                    <div className="flex items-center justify-end gap-2 mt-2">
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="New password"
-                        className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-500/50 w-36"
-                      />
-                      <button onClick={() => handleChangePassword(emp.id)} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
-                      <button onClick={() => { setPasswordId(null); setNewPassword(""); }} className="text-zinc-500 hover:text-zinc-300"><X size={14} /></button>
-                    </div>
-                  )}
-                </td>
+      <div className="flex-1 rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden">
+        <div className="overflow-x-auto h-full">
+          <table className="w-full min-w-[820px] text-sm">
+            <thead className="bg-black/30">
+              <tr className="border-b border-white/5 text-zinc-400 text-left">
+                <th className="px-6 py-4 font-medium">Name</th>
+                <th className="px-6 py-4 font-medium">Email</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Created</th>
+                <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
-            ))}
-            {employees.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-zinc-500">
-                  No employees yet. Add your first team member.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {employees.map((emp) => (
+                <tr key={emp.id} className="border-b border-white/5 hover:bg-white/[0.02]">
+                  <td className="px-6 py-4 font-medium text-white">
+                    {editingId === emp.id ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-500/50 w-32"
+                        />
+                        <button onClick={() => handleUpdate(emp.id)} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
+                        <button onClick={() => setEditingId(null)} className="text-zinc-500 hover:text-zinc-300"><X size={14} /></button>
+                      </div>
+                    ) : (
+                      emp.name
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-zinc-300">{emp.email}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${emp.is_active !== false ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>
+                      {emp.is_active !== false ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-zinc-400 text-xs">{new Date(emp.created_at).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => { setEditingId(emp.id); setEditName(emp.name); }}
+                        className="group relative p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-colors"
+                        aria-label="Edit name"
+                      >
+                        <Pencil size={14} />
+                        <Tooltip label="Edit name" />
+                      </button>
+                      <button
+                        onClick={() => { setPasswordId(passwordId === emp.id ? null : emp.id); setNewPassword(""); }}
+                        className={`group relative p-1.5 rounded-lg transition-colors ${passwordId === emp.id ? "text-orange-400 bg-orange-500/10" : "text-zinc-500 hover:text-orange-400 hover:bg-orange-500/10"}`}
+                        aria-label="Change password"
+                      >
+                        <KeyRound size={14} />
+                        <Tooltip label="Change password" />
+                      </button>
+                      <button
+                        onClick={() => handleToggleActive(emp)}
+                        className={`group relative p-1.5 rounded-lg transition-colors ${emp.is_active !== false ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10" : "text-zinc-500 hover:text-green-400 hover:bg-green-500/10"}`}
+                        aria-label={emp.is_active !== false ? "Block" : "Unblock"}
+                      >
+                        <UserX size={14} />
+                        <Tooltip label={emp.is_active !== false ? "Block" : "Unblock"} tone={emp.is_active !== false ? "danger" : "default"} />
+                      </button>
+                    </div>
+                    {passwordId === emp.id && (
+                      <div className="flex items-center justify-end gap-2 mt-3">
+                        <PasswordInput
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="New password"
+                          className="w-44"
+                          inputClassName="w-full bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-500/50"
+                        />
+                        <button onClick={() => handleChangePassword(emp.id)} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
+                        <button onClick={() => { setPasswordId(null); setNewPassword(""); }} className="text-zinc-500 hover:text-zinc-300"><X size={14} /></button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {employees.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-20 text-center text-zinc-500">
+                    No employees yet. Add your first team member.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

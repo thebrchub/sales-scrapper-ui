@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client";
+import Spinner from "../components/Spinner";
 import {
-  Loader2,
   ArrowLeft,
   Target,
   Phone,
@@ -14,6 +14,7 @@ import {
   Monitor,
   Zap,
   Eye,
+  Mail,
 } from "lucide-react";
 import type { LeadActivity, PaginatedResponse } from "../types";
 
@@ -49,6 +50,13 @@ const STATUS_COLORS: Record<string, string> = {
   closed: "bg-zinc-600/20 text-zinc-500",
 };
 
+function formatDurationFromMinutes(minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0) return "0 minutes";
+  if (minutes < 1) return `${(minutes * 60).toFixed(2)} seconds`;
+  if (minutes < 60) return `${minutes.toFixed(2)} minutes`;
+  return `${(minutes / 60).toFixed(2)} hours`;
+}
+
 export default function EmployeeActivityPage() {
   const { id } = useParams<{ id: string }>();
   const [stats, setStats] = useState<EmployeeStat | null>(null);
@@ -78,11 +86,7 @@ export default function EmployeeActivityPage() {
   }, [id, page]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-orange-500" size={32} />
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (error) {
@@ -98,9 +102,9 @@ export default function EmployeeActivityPage() {
   const conversionRate = total > 0 ? ((stats!.conversions / total) * 100).toFixed(0) : "0";
 
   return (
-    <div className="p-6 space-y-6 animate-in fade-in duration-500">
+    <div className="w-full space-y-6 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <Link
           to="/crm"
           className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
@@ -108,11 +112,11 @@ export default function EmployeeActivityPage() {
           <ArrowLeft size={18} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-white">{stats?.employee_name || "Employee"}</h1>
-          <p className="text-zinc-400 text-sm mt-0.5">Performance & activity details</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">{stats?.employee_name || "Employee"}</h1>
+          <p className="text-zinc-400 text-sm mt-1.5">Performance & activity details</p>
         </div>
         {engagement && (
-          <div className="ml-auto flex items-center gap-2">
+          <div className="sm:ml-auto flex items-center gap-2">
             <span
               className={`w-2.5 h-2.5 rounded-full ${
                 engagement.status === "online"
@@ -139,7 +143,7 @@ export default function EmployeeActivityPage() {
           { label: "Activity (7d)", value: stats?.activity_this_week ?? 0, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
           { label: "Contact Rate", value: `${contactRate}%`, icon: Activity, color: "text-purple-400", bg: "bg-purple-500/10" },
         ].map((card) => (
-          <div key={card.label} className="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 space-y-2">
+          <div key={card.label} className="rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 space-y-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]">
             <div className={`${card.bg} w-10 h-10 rounded-lg flex items-center justify-center`}>
               <card.icon size={20} className={card.color} />
             </div>
@@ -151,22 +155,22 @@ export default function EmployeeActivityPage() {
 
       {/* Engagement Panel */}
       {engagement && (
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6">
-          <h3 className="text-sm font-bold text-zinc-300 mb-4 flex items-center gap-2">
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)]">
+          <h3 className="text-base font-bold text-zinc-200 mb-5 flex items-center gap-2">
             <Monitor size={16} className="text-zinc-500" /> Engagement Metrics
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1">
               <p className="text-xs text-zinc-500 flex items-center gap-1.5"><Clock size={12} /> Time Today</p>
-              <p className="text-lg font-bold text-white">{engagement.time_today_minutes}m</p>
+              <p className="text-lg font-bold text-white">{formatDurationFromMinutes(engagement.time_today_minutes)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-zinc-500 flex items-center gap-1.5"><Clock size={12} /> Time This Week</p>
-              <p className="text-lg font-bold text-white">{engagement.time_this_week_minutes}m</p>
+              <p className="text-lg font-bold text-white">{formatDurationFromMinutes(engagement.time_this_week_minutes)}</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-zinc-500 flex items-center gap-1.5"><Zap size={12} /> Actions/Hour</p>
-              <p className="text-lg font-bold text-white">{engagement.actions_per_hour.toFixed(1)}</p>
+              <p className="text-lg font-bold text-white">{engagement.actions_per_hour.toFixed(2)} actions/hour</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-zinc-500 flex items-center gap-1.5"><Eye size={12} /> Last Seen</p>
@@ -180,7 +184,7 @@ export default function EmployeeActivityPage() {
           <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/5">
             <div className="space-y-1">
               <p className="text-xs text-zinc-500">Avg Daily Usage</p>
-              <p className="text-sm font-bold text-zinc-300">{engagement.avg_daily_minutes}m/day</p>
+              <p className="text-sm font-bold text-zinc-300">{formatDurationFromMinutes(engagement.avg_daily_minutes)} per day</p>
             </div>
             <div className="space-y-1">
               <p className="text-xs text-zinc-500">Daily Streak</p>
@@ -198,8 +202,8 @@ export default function EmployeeActivityPage() {
 
       {/* Progress Bars */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-zinc-300">Contact Rate</h3>
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-6 sm:p-8 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]">
+          <h3 className="text-base font-bold text-zinc-200">Contact Rate</h3>
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">{stats?.contacted ?? 0} / {total}</span>
             <span className="text-white font-bold">{contactRate}%</span>
@@ -211,8 +215,8 @@ export default function EmployeeActivityPage() {
             />
           </div>
         </div>
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6 space-y-3">
-          <h3 className="text-sm font-semibold text-zinc-300">Conversion Rate</h3>
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-6 sm:p-8 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]">
+          <h3 className="text-base font-bold text-zinc-200">Conversion Rate</h3>
           <div className="flex justify-between text-sm">
             <span className="text-zinc-400">{stats?.conversions ?? 0} / {total}</span>
             <span className="text-white font-bold">{conversionRate}%</span>
@@ -227,51 +231,71 @@ export default function EmployeeActivityPage() {
       </div>
 
       {/* Activity Log Table */}
-      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/5">
-          <h3 className="text-sm font-bold text-zinc-300">Recent Activity</h3>
+      <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-white/5">
+          <h3 className="text-base font-bold text-zinc-200">Recent Activity</h3>
         </div>
-        <table className="w-full text-sm">
-          <thead>
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[900px] text-sm">
+          <thead className="bg-black/30">
             <tr className="border-b border-white/5 text-zinc-400 text-left">
-              <th className="px-4 py-3 font-medium">Business</th>
-              <th className="px-4 py-3 font-medium">Phone</th>
-              <th className="px-4 py-3 font-medium">City</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Notes</th>
-              <th className="px-4 py-3 font-medium">Last Contact</th>
-              <th className="px-4 py-3 font-medium">Follow Up</th>
+              <th className="px-6 py-4 font-medium">Business</th>
+              <th className="px-6 py-4 font-medium">Phone</th>
+              <th className="px-6 py-4 font-medium">Email</th>
+              <th className="px-6 py-4 font-medium">City</th>
+              <th className="px-6 py-4 font-medium">Status</th>
+              <th className="px-6 py-4 font-medium">Notes</th>
+              <th className="px-6 py-4 font-medium">Last Contact</th>
+              <th className="px-6 py-4 font-medium">Follow Up</th>
             </tr>
           </thead>
           <tbody>
             {activities.map((a) => (
               <tr key={a.activity_id} className="border-b border-white/5 hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-medium text-white max-w-[180px] truncate">{a.business_name}</td>
-                <td className="px-4 py-3 text-zinc-300 text-xs">{a.phone_e164 || "-"}</td>
-                <td className="px-4 py-3 text-zinc-400">{a.city}</td>
-                <td className="px-4 py-3">
+                <td className="px-6 py-4 font-medium text-white max-w-[220px] truncate">{a.business_name}</td>
+                <td className="px-6 py-4 text-zinc-300 text-xs">
+                  {a.phone_e164 ? (
+                    <a href={`tel:${a.phone_e164}`} className="inline-flex items-center gap-1.5 text-cyan-400 hover:underline">
+                      <Phone size={12} /> {a.phone_e164}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-6 py-4 text-zinc-300 text-xs max-w-[200px]">
+                  {a.email ? (
+                    <a href={`mailto:${a.email}`} className="inline-flex items-center gap-1.5 text-orange-400 hover:underline truncate max-w-full">
+                      <Mail size={12} className="shrink-0" /> <span className="truncate">{a.email}</span>
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
+                <td className="px-6 py-4 text-zinc-400">{a.city}</td>
+                <td className="px-6 py-4">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${STATUS_COLORS[a.status] || "bg-zinc-700 text-zinc-300"}`}>
                     {a.status.replace(/_/g, " ")}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-zinc-400 text-xs max-w-[200px] truncate">{a.notes || "-"}</td>
-                <td className="px-4 py-3 text-zinc-400 text-xs">
+                <td className="px-6 py-4 text-zinc-400 text-xs max-w-[240px] truncate">{a.notes || "-"}</td>
+                <td className="px-6 py-4 text-zinc-400 text-xs">
                   {a.last_contact ? new Date(a.last_contact).toLocaleDateString() : "-"}
                 </td>
-                <td className="px-4 py-3 text-zinc-400 text-xs">
+                <td className="px-6 py-4 text-zinc-400 text-xs">
                   {a.next_follow_up ? new Date(a.next_follow_up).toLocaleDateString() : "-"}
                 </td>
               </tr>
             ))}
             {activities.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-zinc-500">
+                  <td colSpan={8} className="px-6 py-20 text-center text-zinc-500">
                   No activity recorded yet.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+        </div>
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 py-4 border-t border-white/5">
             <button

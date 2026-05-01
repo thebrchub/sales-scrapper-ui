@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
 import type { LeadActivity, PaginatedResponse } from "../types";
-import {
-  Loader2, ChevronDown, ChevronUp, Phone, Mail, Globe,
-  ExternalLink, ShieldCheck, Smartphone, MapPin, Tag
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Phone, Mail, Globe, ExternalLink, MapPin, Tag, ShieldCheck, Smartphone } from "lucide-react";
+import Spinner from "../components/Spinner";
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pending", color: "bg-yellow-500/20 text-yellow-400" },
@@ -54,12 +52,8 @@ export default function CRMLeadsPage() {
     }
   }
 
-  if (loading && leads.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-orange-500" size={32} />
-      </div>
-    );
+  if (loading) {
+    return <Spinner />;
   }
 
   if (error) {
@@ -75,28 +69,28 @@ export default function CRMLeadsPage() {
   const totalPages = Math.ceil(total / 20);
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="w-full animate-in fade-in duration-500 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">My Leads</h1>
-          <p className="text-zinc-400 text-sm mt-1">{total} leads assigned to you</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">My Leads</h1>
+          <p className="text-zinc-400 text-sm mt-1.5">{total} leads assigned to you</p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-[#0a0a0a] border border-white/5 rounded-xl overflow-hidden">
+      <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
+          <table className="w-full min-w-[980px] text-sm">
+            <thead className="bg-black/30">
               <tr className="border-b border-white/5 text-zinc-400 text-left">
-                <th className="px-4 py-3 font-medium w-8"></th>
-                <th className="px-4 py-3 font-medium">Business</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">City</th>
-                <th className="px-4 py-3 font-medium">Category</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Follow Up</th>
+                <th className="px-6 py-4 font-medium w-8"></th>
+                <th className="px-6 py-4 font-medium">Business</th>
+                <th className="px-6 py-4 font-medium">Phone</th>
+                <th className="px-6 py-4 font-medium">Email</th>
+                <th className="px-6 py-4 font-medium">City</th>
+                <th className="px-6 py-4 font-medium">Category</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium">Follow Up</th>
               </tr>
             </thead>
             <tbody>
@@ -112,7 +106,7 @@ export default function CRMLeadsPage() {
               ))}
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-zinc-500">
+                  <td colSpan={8} className="px-6 py-20 text-center text-zinc-500">
                     No leads assigned yet. Ask your admin to assign a campaign.
                   </td>
                 </tr>
@@ -132,14 +126,14 @@ export default function CRMLeadsPage() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 disabled:opacity-30"
+              className="px-4 py-2 text-xs font-bold rounded-xl border border-white/10 bg-[#09090b] text-zinc-300 hover:bg-white/5 disabled:opacity-30"
             >
               Previous
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-white/10 text-zinc-300 hover:bg-white/5 disabled:opacity-30"
+              className="px-4 py-2 text-xs font-bold rounded-xl border border-white/10 bg-[#09090b] text-zinc-300 hover:bg-white/5 disabled:opacity-30"
             >
               Next
             </button>
@@ -170,11 +164,11 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
         className="border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors"
         onClick={onToggle}
       >
-        <td className="px-4 py-3">
+        <td className="px-6 py-4">
           {expanded ? <ChevronUp size={14} className="text-zinc-500" /> : <ChevronDown size={14} className="text-zinc-500" />}
         </td>
-        <td className="px-4 py-3 font-medium text-white">{lead.business_name}</td>
-        <td className="px-4 py-3">
+        <td className="px-6 py-4 font-medium text-white">{lead.business_name}</td>
+        <td className="px-6 py-4">
           {lead.phone_e164 ? (
             <a href={`tel:${lead.phone_e164}`} onClick={(e) => e.stopPropagation()} className="text-cyan-400 hover:underline flex items-center gap-1">
               <Phone size={12} /> {lead.phone_e164}
@@ -183,7 +177,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
             <span className="text-zinc-600">—</span>
           )}
         </td>
-        <td className="px-4 py-3">
+        <td className="px-6 py-4">
           {lead.email ? (
             <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-orange-400 hover:underline flex items-center gap-1">
               <Mail size={12} /> {lead.email}
@@ -192,14 +186,14 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
             <span className="text-zinc-600">—</span>
           )}
         </td>
-        <td className="px-4 py-3 text-zinc-300">{lead.city}</td>
-        <td className="px-4 py-3 text-zinc-300">{lead.category}</td>
-        <td className="px-4 py-3">
+        <td className="px-6 py-4 text-zinc-300">{lead.city}</td>
+        <td className="px-6 py-4 text-zinc-300">{lead.category}</td>
+        <td className="px-6 py-4">
           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
             {lead.status}
           </span>
         </td>
-        <td className="px-4 py-3 text-zinc-400 text-xs">
+        <td className="px-6 py-4 text-zinc-400 text-xs">
           {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleDateString() : "—"}
         </td>
       </tr>
@@ -207,11 +201,11 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
       {/* Expanded Details */}
       {expanded && (
         <tr className="border-b border-white/5 bg-[#050505]">
-          <td colSpan={8} className="px-6 py-4">
+          <td colSpan={8} className="px-8 py-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Lead Info */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Lead Details</h4>
+                <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wide">Lead Details</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-zinc-300">
                     <Globe size={14} className="text-zinc-500" />
@@ -269,10 +263,10 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
 
               {/* Update Form */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Update Activity</h4>
+                <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wide">Update Activity</h4>
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Status</label>
+                    <label className="text-sm text-zinc-400 block mb-1">Status</label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value)}
@@ -284,7 +278,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Notes</label>
+                    <label className="text-sm text-zinc-400 block mb-1">Notes</label>
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
@@ -294,7 +288,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Next Action</label>
+                    <label className="text-sm text-zinc-400 block mb-1">Next Action</label>
                     <input
                       type="text"
                       value={nextAction}
@@ -304,7 +298,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-500 block mb-1">Next Follow Up</label>
+                    <label className="text-sm text-zinc-400 block mb-1">Next Follow Up</label>
                     <input
                       type="datetime-local"
                       value={nextFollowUp}
@@ -324,7 +318,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                       });
                     }}
                     disabled={updating}
-                    className="w-full py-2 px-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-colors"
+                    className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors"
                   >
                     {updating ? "Saving..." : "Save Changes"}
                   </button>

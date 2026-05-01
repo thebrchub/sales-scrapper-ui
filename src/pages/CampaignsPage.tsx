@@ -9,7 +9,8 @@ import {
   Briefcase,
   Clock,
   ShieldOff,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import { useCampaigns, useCreateCampaign } from "../hooks/useApi";
 import { getUserRole } from "../hooks/useRole";
@@ -261,13 +262,13 @@ export default function CampaignsPage() {
               disabled={create.isPending}
               className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-accent-start to-accent-end text-sm font-extrabold text-zinc-950 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_16px_rgba(52,211,153,0.3)] transition-all duration-200 hover:opacity-90 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_20px_rgba(52,211,153,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex justify-center items-center gap-2"
             >
-              {create.isPending ? <><Spinner /> <span>Initializing Engine...</span></> : "Launch Campaign"}
+              {create.isPending ? <><Loader2 className="animate-spin" size={18} /> <span>Initializing Engine...</span></> : "Launch Campaign"}
             </button>
           </div>
         </form>
       )}
 
-      {isLoading && <div className="py-10"><Spinner /></div>}
+      {isLoading && <Spinner />}
       {error && <ErrorBox message={(error as Error).message} />}
 
       {!isLoading && !error && (

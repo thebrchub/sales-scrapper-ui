@@ -64,7 +64,7 @@ export default function CampaignDetailPage() {
     }
   }
 
-  if (isLoading) return <div className="py-20"><Spinner /></div>;
+  if (isLoading) return <Spinner />;
   if (error) return <ErrorBox message={(error as Error).message} />;
   if (!campaign) return <ErrorBox message="Campaign not found" />;
 

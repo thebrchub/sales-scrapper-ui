@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
-import { Loader2, Phone, Clock, UserCheck, XCircle, TrendingUp, Target, CalendarClock } from "lucide-react";
+import Spinner from "../components/Spinner";
+import { Target, Phone, UserCheck, CalendarClock, TrendingUp, Clock } from "lucide-react";
 
 interface EmployeeStats {
   employee_id: string;
@@ -25,11 +26,7 @@ export default function EmployeeDashboardPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-orange-500" size={32} />
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (error) {
@@ -56,11 +53,11 @@ export default function EmployeeDashboardPage() {
   const contactedRate = total > 0 ? ((stats!.contacted / total) * 100).toFixed(1) : "0.0";
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full animate-in fade-in duration-500 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">My Dashboard</h1>
-        <p className="text-zinc-400 text-sm mt-1">Your lead performance overview</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">My Dashboard</h1>
+        <p className="text-zinc-400 text-sm mt-1.5">Your lead performance overview</p>
       </div>
 
       {/* Stats Grid */}
@@ -68,7 +65,7 @@ export default function EmployeeDashboardPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="bg-[#0a0a0a] border border-white/5 rounded-xl p-4 space-y-2"
+            className="rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 space-y-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]"
           >
             <div className={`${card.bg} w-10 h-10 rounded-lg flex items-center justify-center`}>
               <card.icon size={20} className={card.color} />
@@ -81,8 +78,8 @@ export default function EmployeeDashboardPage() {
 
       {/* Progress Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-sm font-semibold text-zinc-300">Contact Rate</h3>
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-6 sm:p-8 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]">
+          <h3 className="text-base font-bold text-zinc-200">Contact Rate</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-zinc-400">Progress</span>
@@ -100,8 +97,8 @@ export default function EmployeeDashboardPage() {
           </p>
         </div>
 
-        <div className="bg-[#0a0a0a] border border-white/5 rounded-xl p-6 space-y-4">
-          <h3 className="text-sm font-semibold text-zinc-300">Conversion Rate</h3>
+        <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-6 sm:p-8 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.5)]">
+          <h3 className="text-base font-bold text-zinc-200">Conversion Rate</h3>
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-zinc-400">Progress</span>
