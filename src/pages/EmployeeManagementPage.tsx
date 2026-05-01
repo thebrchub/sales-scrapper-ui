@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
-import { Loader2, Plus, UserPlus, Pencil, UserX, Check, X } from "lucide-react";
+import { Loader2, Plus, UserPlus, Pencil, UserX, Check, X, KeyRound } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -20,6 +20,8 @@ export default function EmployeeManagementPage() {
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [passwordId, setPasswordId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
     fetchEmployees();
@@ -64,6 +66,20 @@ export default function EmployeeManagementPage() {
     try {
       await api.patch(`/users/employees/${emp.id}`, { is_active: !emp.is_active });
       fetchEmployees();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  async function handleChangePassword(id: string) {
+    if (!newPassword || newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    try {
+      await api.patch(`/users/employees/${id}`, { password: newPassword });
+      setPasswordId(null);
+      setNewPassword("");
     } catch (err: any) {
       setError(err.message);
     }
@@ -190,13 +206,33 @@ export default function EmployeeManagementPage() {
                       <Pencil size={14} />
                     </button>
                     <button
+                      onClick={() => { setPasswordId(passwordId === emp.id ? null : emp.id); setNewPassword(""); }}
+                      className={`p-1.5 rounded-lg transition-colors ${passwordId === emp.id ? "text-orange-400 bg-orange-500/10" : "text-zinc-500 hover:text-orange-400 hover:bg-orange-500/10"}`}
+                      title="Change password"
+                    >
+                      <KeyRound size={14} />
+                    </button>
+                    <button
                       onClick={() => handleToggleActive(emp)}
                       className={`p-1.5 rounded-lg transition-colors ${emp.is_active !== false ? "text-zinc-500 hover:text-red-400 hover:bg-red-500/10" : "text-zinc-500 hover:text-green-400 hover:bg-green-500/10"}`}
-                      title={emp.is_active !== false ? "Deactivate" : "Reactivate"}
+                      title={emp.is_active !== false ? "Block" : "Unblock"}
                     >
                       <UserX size={14} />
                     </button>
                   </div>
+                  {passwordId === emp.id && (
+                    <div className="flex items-center justify-end gap-2 mt-2">
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="New password"
+                        className="bg-zinc-900 border border-white/10 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-500/50 w-36"
+                      />
+                      <button onClick={() => handleChangePassword(emp.id)} className="text-green-400 hover:text-green-300"><Check size={14} /></button>
+                      <button onClick={() => { setPasswordId(null); setNewPassword(""); }} className="text-zinc-500 hover:text-zinc-300"><X size={14} /></button>
+                    </div>
+                  )}
                 </td>
               </tr>
             ))}
