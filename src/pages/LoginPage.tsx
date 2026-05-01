@@ -50,7 +50,7 @@ export default function LoginPage() {
             BRC HUB LLP's
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-accent-start to-accent-end pb-1 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)] relative z-10 mt-1">
-            Leads Generator
+            BRC Connect
           </h1>
         </div>
 

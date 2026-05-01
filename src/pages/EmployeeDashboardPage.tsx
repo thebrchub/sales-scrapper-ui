@@ -1,7 +1,16 @@
 import { useState, useEffect } from "react";
 import { api } from "../api/client";
-import { EmployeeStats } from "../types";
-import { Loader2, Phone, Clock, UserCheck, XCircle, TrendingUp, Target } from "lucide-react";
+import { Loader2, Phone, Clock, UserCheck, XCircle, TrendingUp, Target, CalendarClock } from "lucide-react";
+
+interface EmployeeStats {
+  employee_id: string;
+  employee_name: string;
+  total_leads: number;
+  contacted: number;
+  conversions: number;
+  overdue_follow_ups: number;
+  activity_this_week: number;
+}
 
 export default function EmployeeDashboardPage() {
   const [stats, setStats] = useState<EmployeeStats | null>(null);
@@ -34,17 +43,17 @@ export default function EmployeeDashboardPage() {
   }
 
   const cards = [
-    { label: "Total Assigned", value: stats?.total ?? 0, icon: Target, color: "text-blue-400", bg: "bg-blue-500/10" },
-    { label: "Pending", value: stats?.pending ?? 0, icon: Clock, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+    { label: "Total Leads", value: stats?.total_leads ?? 0, icon: Target, color: "text-blue-400", bg: "bg-blue-500/10" },
     { label: "Contacted", value: stats?.contacted ?? 0, icon: Phone, color: "text-cyan-400", bg: "bg-cyan-500/10" },
-    { label: "Interested", value: stats?.interested ?? 0, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
-    { label: "Converted", value: stats?.converted ?? 0, icon: UserCheck, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-    { label: "Rejected", value: stats?.rejected ?? 0, icon: XCircle, color: "text-red-400", bg: "bg-red-500/10" },
+    { label: "Conversions", value: stats?.conversions ?? 0, icon: UserCheck, color: "text-emerald-400", bg: "bg-emerald-500/10" },
+    { label: "Overdue Follow Ups", value: stats?.overdue_follow_ups ?? 0, icon: CalendarClock, color: "text-red-400", bg: "bg-red-500/10" },
+    { label: "Activity This Week", value: stats?.activity_this_week ?? 0, icon: TrendingUp, color: "text-green-400", bg: "bg-green-500/10" },
+    { label: "Pending", value: Math.max(0, (stats?.total_leads ?? 0) - (stats?.contacted ?? 0) - (stats?.conversions ?? 0)), icon: Clock, color: "text-yellow-400", bg: "bg-yellow-500/10" },
   ];
 
-  const total = stats?.total || 1;
-  const conversionRate = stats ? ((stats.converted / total) * 100).toFixed(1) : "0";
-  const contactedRate = stats ? (((stats.contacted + stats.interested + stats.converted) / total) * 100).toFixed(1) : "0";
+  const total = stats?.total_leads || 0;
+  const conversionRate = total > 0 ? ((stats!.conversions / total) * 100).toFixed(1) : "0.0";
+  const contactedRate = total > 0 ? ((stats!.contacted / total) * 100).toFixed(1) : "0.0";
 
   return (
     <div className="p-6 space-y-6">
@@ -87,7 +96,7 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
           <p className="text-xs text-zinc-500">
-            {(stats?.contacted ?? 0) + (stats?.interested ?? 0) + (stats?.converted ?? 0)} of {stats?.total ?? 0} leads contacted
+            {stats?.contacted ?? 0} of {stats?.total_leads ?? 0} leads contacted
           </p>
         </div>
 
@@ -106,7 +115,7 @@ export default function EmployeeDashboardPage() {
             </div>
           </div>
           <p className="text-xs text-zinc-500">
-            {stats?.converted ?? 0} of {stats?.total ?? 0} leads converted
+            {stats?.conversions ?? 0} of {stats?.total_leads ?? 0} leads converted
           </p>
         </div>
       </div>

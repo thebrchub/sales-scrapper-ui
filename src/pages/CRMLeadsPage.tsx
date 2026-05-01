@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
-import { LeadActivity, PaginatedResponse } from "../types";
+import type { LeadActivity, PaginatedResponse } from "../types";
 import {
   Loader2, ChevronDown, ChevronUp, Phone, Mail, Globe,
   ExternalLink, ShieldCheck, Smartphone, MapPin, Tag
@@ -213,14 +213,16 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-zinc-400 uppercase tracking-wide">Lead Details</h4>
                 <div className="space-y-2 text-sm">
-                  {lead.website_url && (
-                    <div className="flex items-center gap-2 text-zinc-300">
-                      <Globe size={14} className="text-zinc-500" />
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <Globe size={14} className="text-zinc-500" />
+                    {lead.website_url ? (
                       <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
                         {lead.website_url} <ExternalLink size={10} />
                       </a>
-                    </div>
-                  )}
+                    ) : (
+                      <span className="text-zinc-600">No website</span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2 text-zinc-300">
                     <MapPin size={14} className="text-zinc-500" />
                     <span>{lead.city}</span>
@@ -244,7 +246,21 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                   {lead.source?.length > 0 && (
                     <div className="flex items-center gap-2 flex-wrap">
                       {lead.source.map((s) => (
-                        <span key={s} className="px-2 py-0.5 bg-zinc-800 text-zinc-400 text-xs rounded-full">{s}</span>
+                        <a
+                          key={s}
+                          href={
+                            s === "google_maps" ? `https://www.google.com/maps/search/${encodeURIComponent(lead.business_name + " " + lead.city)}` :
+                            s === "google" ? `https://www.google.com/search?q=${encodeURIComponent(lead.business_name + " " + lead.city)}` :
+                            undefined
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`px-2 py-0.5 bg-zinc-800 text-xs rounded-full ${
+                            s === "google_maps" || s === "google" ? "text-blue-400 hover:underline cursor-pointer" : "text-zinc-400"
+                          }`}
+                        >
+                          {s}
+                        </a>
                       ))}
                     </div>
                   )}
@@ -293,6 +309,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
                       type="datetime-local"
                       value={nextFollowUp}
                       onChange={(e) => setNextFollowUp(e.target.value)}
+                      style={{ colorScheme: "dark" }}
                       className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
                     />
                   </div>

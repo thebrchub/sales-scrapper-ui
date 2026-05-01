@@ -8,8 +8,17 @@ import {
   Users,
   Zap,
   Shield,
-  Cpu
+  Cpu,
+  Phone,
+  MessageSquare,
+  CalendarClock,
+  CheckCircle,
+  XCircle,
+  Archive,
+  ClipboardList,
+  UserCog,
 } from "lucide-react";
+import { getUserRole } from "../hooks/useRole";
 
 const STEPS = [
   {
@@ -56,6 +65,7 @@ const TERMINOLOGY = [
 ];
 
 export default function AboutPage() {
+  const role = getUserRole();
   return (
     <div className="animate-in fade-in duration-500">
       
@@ -79,7 +89,7 @@ export default function AboutPage() {
               Platform Overview
             </h3>
             <p className="text-base text-zinc-300 leading-relaxed">
-              Leads Generator is an intelligent data aggregation engine that curates business records from multiple public sources. 
+              BRC Connect is an intelligent data aggregation engine that curates business records from multiple public sources. 
               It automatically validates contact information, scores leads based on conversion potential, and removes 
               duplicates to provide you with a clean, actionable pipeline.
             </p>
@@ -159,6 +169,101 @@ export default function AboutPage() {
           ))}
         </div>
       </div>
+
+      {/* CRM Status Guide */}
+      {(role === "employee" || role === "admin") && (
+        <div className="mt-12">
+          <h3 className="text-lg font-bold text-white mb-5 ml-1 flex items-center gap-2">
+            <ClipboardList size={20} className="text-accent-start" /> CRM Status Guide
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { status: "Pending", icon: Archive, color: "text-zinc-400", bg: "bg-zinc-500/20", border: "border-zinc-500/20", desc: "Lead assigned but not yet contacted. This is the default state when a lead is first assigned to you." },
+              { status: "Contacted", icon: Phone, color: "text-blue-400", bg: "bg-blue-500/20", border: "border-blue-500/20", desc: "First outreach made via call, email, or visit. Mark this after your initial contact attempt." },
+              { status: "Follow Up", icon: CalendarClock, color: "text-orange-400", bg: "bg-orange-500/20", border: "border-orange-500/20", desc: "Needs another touchpoint. Conversation started but not closed — set a follow-up date." },
+              { status: "Converted", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/20", border: "border-emerald-500/20", desc: "Lead became a paying customer. Mark this when the deal is closed successfully." },
+              { status: "Not Interested", icon: XCircle, color: "text-red-400", bg: "bg-red-500/20", border: "border-red-500/20", desc: "Lead declined or is not a fit. Use when the lead explicitly said no or the business is not relevant." },
+              { status: "Closed", icon: Archive, color: "text-zinc-500", bg: "bg-zinc-600/20", border: "border-zinc-600/20", desc: "No further action needed. Catch-all for dead leads, duplicates, or unreachable contacts." },
+            ].map((item) => (
+              <div
+                key={item.status}
+                className={`rounded-xl border ${item.border} bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03),0_8px_16px_rgba(0,0,0,0.4)]`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-9 h-9 rounded-lg ${item.bg} flex items-center justify-center`}>
+                    <item.icon size={18} className={item.color} />
+                  </div>
+                  <span className={`text-sm font-extrabold ${item.color}`}>{item.status}</span>
+                </div>
+                <p className="text-sm text-zinc-400 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-xl border border-white/5 bg-[#09090b] p-5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]">
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              <span className="font-bold text-white">Typical flow:</span>{" "}
+              <span className="text-zinc-400">Pending</span> <span className="text-zinc-600 mx-1">&rarr;</span>{" "}
+              <span className="text-blue-400">Contacted</span> <span className="text-zinc-600 mx-1">&rarr;</span>{" "}
+              <span className="text-orange-400">Follow Up</span> <span className="text-zinc-600 mx-1">&rarr;</span>{" "}
+              <span className="text-emerald-400">Converted</span>{" "}
+              <span className="text-zinc-500 ml-2">or</span>{" "}
+              <span className="text-red-400">Not Interested</span>{" "}
+              <span className="text-zinc-500">or</span>{" "}
+              <span className="text-zinc-500">Closed</span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Employee Workflow Tips */}
+      {role === "employee" && (
+        <div className="mt-10">
+          <h3 className="text-lg font-bold text-white mb-5 ml-1 flex items-center gap-2">
+            <MessageSquare size={20} className="text-accent-start" /> Employee Workflow Tips
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { title: "Start with Fresh Leads", desc: "Your 'My Leads' page shows up to 20 fresh (pending) leads at a time. Work through these before requesting more." },
+              { title: "Always Add Notes", desc: "After every call or interaction, add notes with key details. This helps you prepare for follow-ups and helps your admin track progress." },
+              { title: "Set Follow-Up Dates", desc: "When a lead needs another touchpoint, set a specific follow-up date. Overdue follow-ups are flagged and visible to your admin." },
+              { title: "Update Status Promptly", desc: "Change lead status immediately after each interaction. This keeps your dashboard accurate and helps your admin monitor team performance." },
+            ].map((tip) => (
+              <div
+                key={tip.title}
+                className="rounded-xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03),0_8px_16px_rgba(0,0,0,0.4)]"
+              >
+                <h4 className="text-sm font-bold text-white mb-2">{tip.title}</h4>
+                <p className="text-sm text-zinc-400 leading-relaxed">{tip.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Admin Dashboard Explanation */}
+      {role === "admin" && (
+        <div className="mt-10">
+          <h3 className="text-lg font-bold text-white mb-5 ml-1 flex items-center gap-2">
+            <UserCog size={20} className="text-accent-start" /> Admin CRM Guide
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { title: "CRM Dashboard", desc: "View aggregated performance across all your employees — total leads assigned, contact rates, conversions, and overdue follow-ups at a glance." },
+              { title: "Employee Drill-Down", desc: "Click any employee in the CRM dashboard to see their individual stats, engagement metrics (time spent, actions per hour), and full activity log." },
+              { title: "Campaign Assignment", desc: "When creating a campaign, assign it to one of your employees. This populates their CRM lead queue with fresh leads to work through." },
+              { title: "Engagement Tracking", desc: "Monitor how actively each employee uses the tool — time spent, daily streaks, idle days, and actions per hour. All tracked automatically." },
+            ].map((tip) => (
+              <div
+                key={tip.title}
+                className="rounded-xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#0a0a0c] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.03),0_8px_16px_rgba(0,0,0,0.4)]"
+              >
+                <h4 className="text-sm font-bold text-white mb-2">{tip.title}</h4>
+                <p className="text-sm text-zinc-400 leading-relaxed">{tip.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
     </div>
   );

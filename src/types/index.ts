@@ -23,6 +23,8 @@ export interface Lead {
   has_ssl: boolean | null;
   is_mobile_friendly: boolean | null;
   status: "new" | "contacted" | "qualified" | "converted" | "closed";
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +41,7 @@ export interface Campaign {
   leads_found: number;
   auto_rescrape: boolean;
   drop_no_contact: boolean;
+  assigned_to?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -114,10 +117,11 @@ export interface LeadActivity {
 }
 
 export interface EmployeeStats {
-  total: number;
-  pending: number;
+  employee_id: string;
+  employee_name: string;
+  total_leads: number;
   contacted: number;
-  interested: number;
-  converted: number;
-  rejected: number;
+  conversions: number;
+  overdue_follow_ups: number;
+  activity_this_week: number;
 }

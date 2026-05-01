@@ -22,6 +22,7 @@ const ADMIN_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
   { to: "/leads", icon: Users, label: "Leads" },
+  { to: "/crm", icon: ClipboardList, label: "CRM" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/employees", icon: UserCog, label: "Employees" },
   { to: "/about", icon: BookOpen, label: "Overview" },
@@ -31,6 +32,7 @@ const EMPLOYEE_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/crm/leads", icon: ClipboardList, label: "My Leads" },
   { to: "/crm/history", icon: History, label: "History" },
+  { to: "/about", icon: BookOpen, label: "Overview" },
 ];
 
 const SUPER_ADMIN_NAV = [
@@ -80,7 +82,7 @@ export default function Layout() {
                 BRC HUB LLP'S
               </p>
               <h1 className="text-xl font-black tracking-tight text-orange-500 leading-none drop-shadow-[0_0_8px_rgba(249,115,22,0.2)]">
-                Leads Generator
+                BRC Connect
               </h1>
             </div>
           )}
@@ -145,7 +147,7 @@ export default function Layout() {
                BRC HUB LLP'S
              </p>
              <h1 className="text-lg font-black tracking-tight text-orange-500 leading-none drop-shadow-[0_0_5px_rgba(249,115,22,0.2)]">
-               Leads Generator
+               BRC Connect
              </h1>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Download, ExternalLink, Search, Filter, Database, ChevronDown, FastForward } from "lucide-react";
+import { Download, ExternalLink, Search, Filter, Database, ChevronDown, FastForward, UserPlus } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
-import { getExportUrl, getToken } from "../api/client";
+import { api, getExportUrl, getToken } from "../api/client";
+import { getUserRole } from "../hooks/useRole";
 import type { LeadFilters } from "../types";
 import StatusBadge from "../components/StatusBadge";
 import ScoreBadge from "../components/ScoreBadge";
@@ -77,8 +78,20 @@ function CustomDropdown({
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [lastVisitedId, setLastVisitedId] = useState<string | null>(null);
-  
   const [jumpPage, setJumpPage] = useState("");
+  const role = getUserRole();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [employees, setEmployees] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [assignEmployee, setAssignEmployee] = useState("");
+  const [assigning, setAssigning] = useState(false);
+
+  useEffect(() => {
+    if (role === "admin") {
+      api.get<{ data: { id: string; name: string; email: string }[] }>("/users/employees")
+        .then((res) => setEmployees(res.data || []))
+        .catch(() => {});
+    }
+  }, [role]);
 
   useEffect(() => {
     if ([...searchParams.keys()].length === 0) {
@@ -121,6 +134,11 @@ export default function LeadsPage() {
 
   const leads = data?.data || [];
   const meta = data?.meta;
+
+  // Clear selection when page/filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [pageParam, statusParam, scoreParam, cityParam]);
 
   useEffect(() => {
     if (lastVisitedId && leads.length > 0) {
@@ -186,6 +204,41 @@ export default function LeadsPage() {
     const token = getToken();
     if (token) params.token = token;
     window.open(getExportUrl(params), "_blank");
+  }
+
+  async function handleBulkAssign() {
+    if (selectedIds.size === 0) return;
+    setAssigning(true);
+    try {
+      await api.post("/leads/assign", {
+        lead_ids: [...selectedIds],
+        employee_id: assignEmployee || "",
+      });
+      toast.success(`${selectedIds.size} lead(s) ${assignEmployee ? "assigned" : "unassigned"}`);
+      setSelectedIds(new Set());
+      setAssignEmployee("");
+    } catch {
+      toast.error("Failed to assign leads");
+    } finally {
+      setAssigning(false);
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === leads.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(leads.map((l: any) => l.id)));
+    }
   }
 
   function handleRowClick(id: string) {
@@ -316,6 +369,44 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {/* Bulk Assign Toolbar — Admin Only */}
+      {role === "admin" && selectedIds.size > 0 && (
+        <div className="rounded-2xl border border-accent-start/30 bg-accent-start/5 backdrop-blur-sm p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 shadow-[0_10px_20px_rgba(52,211,153,0.1)] animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2 text-sm font-bold text-accent-start">
+            <UserPlus size={16} />
+            <span>{selectedIds.size} lead{selectedIds.size > 1 ? "s" : ""} selected</span>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 flex-1">
+            <select
+              value={assignEmployee}
+              onChange={(e) => setAssignEmployee(e.target.value)}
+              className="rounded-xl border border-white/10 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-2 text-sm text-white outline-none focus:border-accent-start/50 transition-all w-full sm:w-auto min-w-[200px]"
+              style={{ colorScheme: "dark" }}
+            >
+              <option value="">-- Unassign --</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name} ({emp.email})
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleBulkAssign}
+              disabled={assigning}
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-accent-start to-accent-end text-sm font-extrabold text-zinc-950 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_8px_rgba(52,211,153,0.3)] transition-all duration-200 hover:opacity-90 hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {assigning ? "Assigning..." : assignEmployee ? "Assign" : "Unassign"}
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs font-bold text-zinc-500 hover:text-white transition-colors"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Top Pagination */}
       {meta && meta.totalPages > 1 && (
         <div className="mb-4">
@@ -331,11 +422,24 @@ export default function LeadsPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-black/40 border-b border-white/5 backdrop-blur-md">
               <tr>
+                {role === "admin" && (
+                  <th className="px-4 py-5 w-10">
+                    <input
+                      type="checkbox"
+                      checked={leads.length > 0 && selectedIds.size === leads.length}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-white/20 bg-[#09090b] accent-emerald-400 cursor-pointer"
+                    />
+                  </th>
+                )}
                 <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Business</th>
                 <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Contact</th>
                 <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Location</th>
                 <th className="px-6 py-5 text-center text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Score</th>
                 <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Status</th>
+                {role === "admin" && (
+                  <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Assigned To</th>
+                )}
                 <th className="px-6 py-5 text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Source Links</th>
                 <th className="px-6 py-5 text-right text-[10px] font-extrabold uppercase tracking-widest text-zinc-500">Action</th>
               </tr>
@@ -352,6 +456,16 @@ export default function LeadsPage() {
                       isHighlighted ? "bg-accent-start/5" : "hover:bg-white/[0.02]"
                     }`}
                   >
+                    {role === "admin" && (
+                      <td className="px-4 py-4 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(lead.id)}
+                          onChange={() => toggleSelect(lead.id)}
+                          className="w-4 h-4 rounded border-white/20 bg-[#09090b] accent-emerald-400 cursor-pointer"
+                        />
+                      </td>
+                    )}
                     <td className="relative px-6 py-4 min-w-[200px] max-w-[320px] whitespace-normal break-words">
                       
                       {isHighlighted && (
@@ -392,6 +506,17 @@ export default function LeadsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <StatusBadge status={lead.status} />
                     </td>
+                    {role === "admin" && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {lead.assigned_to_name ? (
+                          <span className="text-xs font-bold text-accent-start bg-accent-start/10 px-2.5 py-1 rounded-lg border border-accent-start/20">
+                            {lead.assigned_to_name}
+                          </span>
+                        ) : (
+                          <span className="text-xs font-medium text-zinc-600 italic">Unassigned</span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 min-w-[140px]">
                       <div className="flex flex-wrap gap-2">
                         {lead.source?.map((s: string) => {

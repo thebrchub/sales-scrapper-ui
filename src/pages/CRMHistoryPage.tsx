@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { api } from "../api/client";
-import { LeadActivity, PaginatedResponse } from "../types";
+import type { LeadActivity, PaginatedResponse } from "../types";
 import { Loader2, Phone, Mail, Globe, ExternalLink } from "lucide-react";
 
 const STATUS_COLORS: Record<string, string> = {
@@ -69,6 +69,7 @@ export default function CRMHistoryPage() {
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Notes</th>
                 <th className="px-4 py-3 font-medium">Last Contact</th>
+                <th className="px-4 py-3 font-medium">Next Follow Up</th>
                 <th className="px-4 py-3 font-medium">Website</th>
               </tr>
             </thead>
@@ -102,6 +103,9 @@ export default function CRMHistoryPage() {
                   <td className="px-4 py-3 text-zinc-400 text-xs">
                     {lead.last_contact ? new Date(lead.last_contact).toLocaleDateString() : "—"}
                   </td>
+                  <td className="px-4 py-3 text-zinc-400 text-xs">
+                    {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleDateString() : "—"}
+                  </td>
                   <td className="px-4 py-3">
                     {lead.website_url ? (
                       <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
@@ -113,7 +117,7 @@ export default function CRMHistoryPage() {
               ))}
               {leads.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-zinc-500">
+                  <td colSpan={9} className="px-4 py-12 text-center text-zinc-500">
                     No history yet. Start contacting your assigned leads!
                   </td>
                 </tr>
