@@ -54,7 +54,7 @@ export default function CampaignDetailPage() {
     if (!assignedTo || !id) return;
     setAssigning(true);
     try {
-      await api.patch(`/campaigns/${id}/assign`, { assigned_to: assignedTo });
+      await api.patch(`/campaigns/${id}/assign`, { employee_id: assignedTo });
       toast.success("Campaign assigned successfully");
       refetch();
     } catch (err: any) {
