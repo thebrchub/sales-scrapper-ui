@@ -279,10 +279,10 @@ export default function EmployeeActivityPage() {
                 </td>
                 <td className="px-6 py-4 text-zinc-400 text-xs max-w-[240px] truncate">{a.notes || "-"}</td>
                 <td className="px-6 py-4 text-zinc-400 text-xs">
-                  {a.last_contact ? new Date(a.last_contact).toLocaleDateString() : "-"}
+                  {a.last_contact ? new Date(a.last_contact).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
                 </td>
                 <td className="px-6 py-4 text-zinc-400 text-xs">
-                  {a.next_follow_up ? new Date(a.next_follow_up).toLocaleDateString() : "-"}
+                  {a.next_follow_up ? new Date(a.next_follow_up).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
                 </td>
               </tr>
             ))}
