@@ -194,7 +194,7 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
           </span>
         </td>
         <td className="px-6 py-4 text-zinc-400 text-xs">
-          {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleDateString() : "—"}
+          {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
         </td>
       </tr>
 

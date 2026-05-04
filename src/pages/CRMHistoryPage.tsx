@@ -102,10 +102,10 @@ export default function CRMHistoryPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-zinc-400 text-xs">
-                    {lead.last_contact ? new Date(lead.last_contact).toLocaleDateString() : "—"}
+                    {lead.last_contact ? new Date(lead.last_contact).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
                   </td>
                   <td className="px-6 py-4 text-zinc-400 text-xs">
-                    {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleDateString() : "—"}
+                    {lead.next_follow_up ? new Date(lead.next_follow_up).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
                   </td>
                   <td className="px-6 py-4">
                     {lead.website_url ? (
