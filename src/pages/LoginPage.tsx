@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/client";
+import PasswordInput from "../components/PasswordInput";
+// 👇 FIXED: Removed 'Spinner' and brought back 'Loader2' for the inline button
 import { Loader2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
@@ -50,7 +52,7 @@ export default function LoginPage() {
             BRC HUB LLP's
           </p>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-accent-start to-accent-end pb-1 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)] relative z-10 mt-1">
-            Leads Generator
+            BRC Connect
           </h1>
         </div>
 
@@ -87,14 +89,13 @@ export default function LoginPage() {
               Authorization Key
             </label>
             {/* Deeply Recessed Input */}
-            <input
-              type="password"
+            <PasswordInput
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full rounded-xl border border-white/5 bg-[#050505] shadow-[inset_0_2px_10px_rgba(0,0,0,0.9)] px-4 py-3.5 text-sm font-bold text-white placeholder:text-zinc-600 outline-none focus:bg-black focus:border-accent-start/50 transition-all duration-200"
+              inputClassName="w-full rounded-xl border border-white/5 bg-[#050505] shadow-[inset_0_2px_10px_rgba(0,0,0,0.9)] px-4 py-3.5 text-sm font-bold text-white placeholder:text-zinc-600 outline-none focus:bg-black focus:border-accent-start/50 transition-all duration-200"
             />
           </div>
 
@@ -106,6 +107,7 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
+                {/* 👇 FIXED: Using Loader2 instead of the full-page Spinner */}
                 <Loader2 className="animate-spin" size={18} />
                 <span>Authenticating...</span>
               </>

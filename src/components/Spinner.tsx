@@ -11,28 +11,39 @@ const LOADING_MESSAGES = [
   "Stabilizing connection...",
 ];
 
-export default function Spinner() {
+export default function Spinner({ size = 192 }: { size?: number }) {
   const [messageIndex, setMessageIndex] = useState(0);
 
   // Smoothly cycle messages every 2 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setMessageIndex((prev) => (prev + 1) % LOADING_MESSAGES.length);
-    }, 2000); // 2-second interval
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
 
+  // Calculate perfect scale based on the original 192px (w-48) design
+  const scaleFactor = size / 192;
+
   return (
-    // 👇 FIXED: Removed 'fixed inset-0 bg-black z-50' 
-    // Replaced with 'relative w-full min-h-[70vh]' so it centers inside the page, not the screen!
     <div className="relative flex flex-col items-center justify-center w-full min-h-[70vh] animate-in fade-in duration-300">
       
-      {/* Background ambient glow effect */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-start/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      {/* Background ambient glow effect - scales dynamically */}
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent-start/5 blur-[120px] rounded-full pointer-events-none z-0" 
+        style={{ width: size * 3, height: size * 3 }}
+      />
 
-      {/* The Central Animated Assembly */}
-      <div className="relative w-48 h-48 flex items-center justify-center mb-10 z-10 scale-90 sm:scale-100">
+      {/* 
+        The Central Animated Assembly 
+        We use CSS transform scale here so the internal layout never breaks, 
+        regardless of what 'size' the backend passes!
+      */}
+      <div 
+        className="relative w-48 h-48 flex items-center justify-center mb-10 z-10"
+        style={{ transform: `scale(${scaleFactor})` }}
+      >
         
         {/* Outer Rotating Ring (Clockwise) */}
         <div className="absolute inset-0 rounded-full border-2 border-white/5 animate-spin duration-10000">
@@ -45,7 +56,7 @@ export default function Spinner() {
           <div className="absolute top-10 left-0 w-2 h-2 rounded-full bg-accent-end" />
         </div>
 
-        {/* The Core Pulsing Orb - Uses gradient and custom pulse animation */}
+        {/* The Core Pulsing Orb */}
         <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-accent-start to-accent-end animate-pulse-glow flex items-center justify-center overflow-hidden">
           
           {/* Internal Core "Intelligence" Glow */}
@@ -54,7 +65,7 @@ export default function Spinner() {
              <span className="relative z-10 text-[10px] font-extrabold text-accent-start opacity-70 tracking-[0.2em] uppercase">BRC</span>
           </div>
           
-          {/* Subtle Data Lines and Nodes - Replaces the basic spinner icon */}
+          {/* RESTORED: Subtle Data Lines and Nodes */}
           <svg className="absolute inset-0 w-full h-full text-white/10" viewBox="0 0 100 100">
             <line x1="10" y1="10" x2="90" y2="90" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" />
             <line x1="90" y1="10" x2="10" y2="90" stroke="currentColor" strokeWidth="0.5" strokeDasharray="3 3" />

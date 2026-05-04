@@ -9,17 +9,39 @@ import {
   X,
   BookOpen,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ClipboardList,
+  History,
+  UserCog
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { getUserRole } from "../hooks/useRole";
+import Tooltip from "./Tooltip";
 
-const NAV = [
+const ADMIN_NAV = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
+  { to: "/leads", icon: Users, label: "Leads" },
+  { to: "/crm", icon: ClipboardList, label: "CRM" },
+  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/employees", icon: UserCog, label: "Employees" },
+  { to: "/about", icon: BookOpen, label: "Overview" },
+];
+
+const EMPLOYEE_NAV = [
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/crm/leads", icon: ClipboardList, label: "My Leads" },
+  { to: "/crm/history", icon: History, label: "History" },
+  { to: "/about", icon: BookOpen, label: "Overview" },
+];
+
+const SUPER_ADMIN_NAV = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/campaigns", icon: Megaphone, label: "Campaigns" },
   { to: "/leads", icon: Users, label: "Leads" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  // { to: "/settings", icon: Settings, label: "Settings" }, // HIDDEN FOR NOW
+  { to: "/admins", icon: UserCog, label: "Admins" },
   { to: "/about", icon: BookOpen, label: "Overview" },
 ];
 
@@ -27,6 +49,13 @@ export default function Layout() {
   const { logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const role = getUserRole();
+
+  const NAV = useMemo(() => {
+    if (role === "employee") return EMPLOYEE_NAV;
+    if (role === "super_admin") return SUPER_ADMIN_NAV;
+    return ADMIN_NAV;
+  }, [role]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-black font-sans text-zinc-100">
@@ -54,7 +83,7 @@ export default function Layout() {
                 BRC HUB LLP'S
               </p>
               <h1 className="text-xl font-black tracking-tight text-orange-500 leading-none drop-shadow-[0_0_8px_rgba(249,115,22,0.2)]">
-                Leads Generator
+                BRC Connect
               </h1>
             </div>
           )}
@@ -83,9 +112,7 @@ export default function Layout() {
               
               {/* Skeuomorphic Floating Tooltip */}
               {isCollapsed && (
-                <span className="absolute left-full ml-4 px-3 py-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_10px_20px_rgba(0,0,0,0.8)] text-white text-xs font-extrabold tracking-wide rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap pointer-events-none">
-                  {item.label}
-                </span>
+                <Tooltip label={item.label} side="right" />
               )}
             </NavLink>
           ))}
@@ -102,9 +129,7 @@ export default function Layout() {
             <LogOut size={20} className="shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5" />
             {!isCollapsed && <span>Logout</span>}
             {isCollapsed && (
-              <span className="absolute left-full ml-4 px-3 py-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1),0_10px_20px_rgba(0,0,0,0.8)] text-red-400 text-xs font-extrabold tracking-wide rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap pointer-events-none">
-                Logout
-              </span>
+              <Tooltip label="Logout" side="right" tone="danger" />
             )}
           </button>
         </div>
@@ -119,7 +144,7 @@ export default function Layout() {
                BRC HUB LLP'S
              </p>
              <h1 className="text-lg font-black tracking-tight text-orange-500 leading-none drop-shadow-[0_0_5px_rgba(249,115,22,0.2)]">
-               Leads Generator
+               BRC Connect
              </h1>
           </div>
         </div>

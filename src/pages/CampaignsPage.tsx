@@ -9,14 +9,23 @@ import {
   Briefcase,
   Clock,
   ShieldOff,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import { useCampaigns, useCreateCampaign } from "../hooks/useApi";
+import { getUserRole } from "../hooks/useRole";
+import { api } from "../api/client";
 import StatusBadge from "../components/StatusBadge";
 import Pagination from "../components/Pagination";
 import Spinner from "../components/Spinner";
 import ErrorBox from "../components/ErrorBox";
 import toast from "react-hot-toast";
+
+interface SimpleEmployee {
+  id: string;
+  name: string;
+  email: string;
+}
 
 export default function CampaignsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -57,6 +66,17 @@ export default function CampaignsPage() {
   const [categories, setCategories] = useState("");
   const [autoRescrape, setAutoRescrape] = useState(false);
   const [dropNoContact, setDropNoContact] = useState(true);
+  const [assignedTo, setAssignedTo] = useState("");
+  const [employees, setEmployees] = useState<SimpleEmployee[]>([]);
+  const role = getUserRole();
+
+  useEffect(() => {
+    if (role === "admin") {
+      api.get<{ data: SimpleEmployee[] }>("/users/employees")
+        .then((res) => setEmployees(res.data || []))
+        .catch(() => {});
+    }
+  }, [role]);
 
   const campaigns = data?.data || [];
   const meta = data?.meta;
@@ -86,14 +106,16 @@ export default function CampaignsPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     try {
-      const result = await create.mutateAsync({
+      const payload: any = {
         name,
         sources,
         cities: cities.split(",").map((c: string) => c.trim()).filter(Boolean),
         categories: categories.split(",").map((c: string) => c.trim()).filter(Boolean),
         auto_rescrape: autoRescrape,
         drop_no_contact: dropNoContact,
-      });
+      };
+      if (assignedTo) payload.assigned_to = assignedTo;
+      const result = await create.mutateAsync(payload);
       toast.success("Campaign created");
       setShowForm(false);
       setName("");
@@ -101,6 +123,7 @@ export default function CampaignsPage() {
       setCategories("");
       setAutoRescrape(false);
       setDropNoContact(true);
+      setAssignedTo("");
       navigate(`/campaigns/${result.id}`);
     } catch (err) {
       toast.error((err as Error).message);
@@ -180,6 +203,28 @@ export default function CampaignsPage() {
             </div>
           </div>
 
+          {/* Assign to Employee (admin only) */}
+          {role === "admin" && employees.length > 0 && (
+            <div className="relative z-10">
+              <label className="block text-sm font-bold text-zinc-300 mb-2">
+                Assign to Employee <span className="text-zinc-500 font-normal ml-1">(optional)</span>
+              </label>
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all appearance-none"
+                style={{ colorScheme: "dark" }}
+              >
+                <option value="">-- Unassigned --</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.name} ({emp.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Warning Banner - Recessed */}
           <div className="flex items-start gap-2.5 mt-2 bg-[#09090b] border border-amber-500/20 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] p-4 rounded-xl relative z-10">
             <Info size={16} className="text-amber-400 shrink-0 mt-0.5 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
@@ -217,13 +262,13 @@ export default function CampaignsPage() {
               disabled={create.isPending}
               className="w-full sm:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-accent-start to-accent-end text-sm font-extrabold text-zinc-950 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_16px_rgba(52,211,153,0.3)] transition-all duration-200 hover:opacity-90 hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_20px_rgba(52,211,153,0.4)] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex justify-center items-center gap-2"
             >
-              {create.isPending ? <><Spinner /> <span>Initializing Engine...</span></> : "Launch Campaign"}
+              {create.isPending ? <><Loader2 className="animate-spin" size={18} /> <span>Initializing Engine...</span></> : "Launch Campaign"}
             </button>
           </div>
         </form>
       )}
 
-      {isLoading && <div className="py-10"><Spinner /></div>}
+      {isLoading && <Spinner />}
       {error && <ErrorBox message={(error as Error).message} />}
 
       {!isLoading && !error && (

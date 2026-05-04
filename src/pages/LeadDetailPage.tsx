@@ -106,7 +106,7 @@ export default function LeadDetailPage() {
     }
   }
 
-  if (isLoading) return <div className="py-20"><Spinner /></div>;
+  if (isLoading) return <Spinner />;
   if (error) return <ErrorBox message={(error as Error).message} />;
   if (!lead) return <ErrorBox message="Lead not found" />;
 
@@ -201,7 +201,15 @@ export default function LeadDetailPage() {
                   <Phone size={18} className="text-zinc-400 group-hover:text-accent-start transition-colors" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-lg font-black text-white tracking-tight">{lead.phone_e164 || <span className="text-zinc-600 italic text-base font-semibold">No phone available</span>}</p>
+                  <p className="text-lg font-black text-white tracking-tight">
+                    {lead.phone_e164 ? (
+                      <a href={`tel:${lead.phone_e164}`} className="hover:text-cyan-400 transition-colors">
+                        {lead.phone_e164}
+                      </a>
+                    ) : (
+                      <span className="text-zinc-600 italic text-base font-semibold">No phone available</span>
+                    )}
+                  </p>
                   {lead.phone_e164 && (
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-2 mt-3">
                       <div className="flex items-center gap-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] px-2.5 py-1 rounded-md">
@@ -233,7 +241,15 @@ export default function LeadDetailPage() {
                   <Mail size={18} className="text-zinc-400 group-hover:text-blue-400 transition-colors" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-lg font-black text-white tracking-tight truncate">{lead.email || <span className="text-zinc-600 italic text-base font-semibold">No email available</span>}</p>
+                  <p className="text-lg font-black text-white tracking-tight truncate">
+                    {lead.email ? (
+                      <a href={`mailto:${lead.email}`} className="hover:text-blue-400 transition-colors">
+                        {lead.email}
+                      </a>
+                    ) : (
+                      <span className="text-zinc-600 italic text-base font-semibold">No email available</span>
+                    )}
+                  </p>
                   {lead.email && (
                     <div className="flex items-center flex-wrap gap-x-3 gap-y-2 mt-3">
                       <div className="flex items-center gap-1.5 bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] px-2.5 py-1 rounded-md">

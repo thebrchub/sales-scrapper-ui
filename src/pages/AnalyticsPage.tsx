@@ -32,7 +32,7 @@ export default function AnalyticsPage() {
   const { data: warmLeads } = useLeads({ page: 1, page_size: 1, score_gte: 40 });
   const { data: phoneLeads } = useLeads({ page: 1, page_size: 1, has_phone: true });
 
-  if (isLoading) return <div className="py-20"><Spinner /></div>;
+  if (isLoading) return <Spinner />;
   if (error) return <ErrorBox message={(error as Error).message} />;
 
   const total = allLeads?.meta?.total ?? 0;
