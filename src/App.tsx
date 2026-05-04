@@ -22,6 +22,7 @@ import EmployeeManagementPage from "./pages/EmployeeManagementPage";
 import AdminManagementPage from "./pages/AdminManagementPage";
 import CRMDashboardPage from "./pages/CRMDashboardPage";
 import EmployeeActivityPage from "./pages/EmployeeActivityPage";
+import CalendarPage from "./pages/CalendarPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return getToken() ? <>{children}</> : <Navigate to="/login" replace />;
@@ -87,6 +88,8 @@ export default function App() {
             {/* Employee CRM routes */}
             <Route path="crm/leads" element={<RoleGuard allowed={["employee"]}><CRMLeadsPage /></RoleGuard>} />
             <Route path="crm/history" element={<RoleGuard allowed={["employee"]}><CRMHistoryPage /></RoleGuard>} />
+
+            <Route path="/calendar" element={<CalendarPage />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
