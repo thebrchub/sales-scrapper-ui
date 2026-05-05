@@ -5,6 +5,7 @@ import {
   X,
   Megaphone,
   ChevronRight,
+  Trash2,
   Users,
   Briefcase,
   Clock,
@@ -56,7 +57,7 @@ export default function CampaignsPage() {
 
   const pageParam = parseInt(searchParams.get("page") || "1", 10);
 
-  const { data, isLoading, error } = useCampaigns(pageParam, 10);
+  const { data, isLoading, error, refetch } = useCampaigns(pageParam, 10);
   const create = useCreateCampaign();
   const navigate = useNavigate();
   
@@ -69,6 +70,7 @@ export default function CampaignsPage() {
   const [dropNoContact, setDropNoContact] = useState(true);
   const [assignedTo, setAssignedTo] = useState("");
   const [employees, setEmployees] = useState<SimpleEmployee[]>([]);
+  const [deletingCampaignId, setDeletingCampaignId] = useState<string | null>(null);
   const role = getUserRole();
 
   // Helper function to normalize and deduplicate tags (Cities/Categories)
@@ -168,6 +170,26 @@ const normalizeAndDeduplicate = (input: string): string[] => {
     toast.error((err as Error).message);
   }
 }
+
+  async function handleDeleteCampaign(campaignId: string, campaignName: string) {
+    const ok = window.confirm(`Delete campaign "${campaignName}" and associated leads? This cannot be undone.`);
+    if (!ok) return;
+
+    setDeletingCampaignId(campaignId);
+    try {
+      const res = await api.delete<{ status: string; deleted_leads: number }>(`/campaigns/${campaignId}`);
+      toast.success(`Campaign deleted. Removed ${res.deleted_leads ?? 0} associated leads.`);
+      if (lastVisitedId === campaignId) {
+        sessionStorage.removeItem("lastVisitedCampaign");
+        setLastVisitedId(null);
+      }
+      await refetch();
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to delete campaign");
+    } finally {
+      setDeletingCampaignId(null);
+    }
+  }
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -394,6 +416,24 @@ const normalizeAndDeduplicate = (input: string): string[] => {
                       </div>
 
                       {/* Neumorphic Arrow Button */}
+                      <button
+                        type="button"
+                        disabled={deletingCampaignId === c.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleDeleteCampaign(c.id, c.name);
+                        }}
+                        className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center hover:bg-red-500/10 transition-colors hidden md:flex disabled:opacity-50"
+                        title="Delete campaign"
+                      >
+                        {deletingCampaignId === c.id ? (
+                          <Loader2 size={16} className="text-red-400 animate-spin" />
+                        ) : (
+                          <Trash2 size={16} className="text-zinc-500 hover:text-red-400 transition-colors" />
+                        )}
+                      </button>
+
                       <div className="w-10 h-10 rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_-2px_4px_rgba(0,0,0,0.6),inset_0_2px_4px_rgba(255,255,255,0.02),0_4px_8px_rgba(0,0,0,0.5)] flex items-center justify-center group-hover:bg-accent-start/10 transition-colors hidden md:flex">
                         <ChevronRight size={18} className="text-zinc-500 group-hover:text-accent-start group-hover:translate-x-0.5 transition-all" />
                       </div>
