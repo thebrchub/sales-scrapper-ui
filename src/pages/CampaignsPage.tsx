@@ -12,6 +12,7 @@ import {
   Info,
   Loader2
 } from "lucide-react";
+import CustomDropdown from "../components/CustomDropdown";
 import { useCampaigns, useCreateCampaign } from "../hooks/useApi";
 import { getUserRole } from "../hooks/useRole";
 import { api } from "../api/client";
@@ -70,6 +71,32 @@ export default function CampaignsPage() {
   const [employees, setEmployees] = useState<SimpleEmployee[]>([]);
   const role = getUserRole();
 
+  // Helper function to normalize and deduplicate tags (Cities/Categories)
+// Helper function to normalize and deduplicate ANY comma-separated tags
+const normalizeAndDeduplicate = (input: string): string[] => {
+  const uniqueItems = new Map<string, string>();
+  
+  input.split(",").forEach((item) => {
+    const trimmed = item.trim();
+    if (trimmed) {
+      // Lowercase key for strict deduplication
+      const lowerKey = trimmed.toLowerCase();
+      
+      // Title Case for premium UI display
+      const titleCased = trimmed
+        .split(" ")
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
+
+      if (!uniqueItems.has(lowerKey)) {
+        uniqueItems.set(lowerKey, titleCased);
+      }
+    }
+  });
+
+  return Array.from(uniqueItems.values());
+};
+
   useEffect(() => {
     if (role === "admin") {
       api.get<{ data: SimpleEmployee[] }>("/users/employees")
@@ -103,32 +130,44 @@ export default function CampaignsPage() {
     sessionStorage.setItem("lastVisitedCampaign", id);
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    try {
-      const payload: any = {
-        name,
-        sources,
-        cities: cities.split(",").map((c: string) => c.trim()).filter(Boolean),
-        categories: categories.split(",").map((c: string) => c.trim()).filter(Boolean),
-        auto_rescrape: autoRescrape,
-        drop_no_contact: dropNoContact,
-      };
-      if (assignedTo) payload.assigned_to = assignedTo;
-      const result = await create.mutateAsync(payload);
-      toast.success("Campaign created");
-      setShowForm(false);
-      setName("");
-      setCities("");
-      setCategories("");
-      setAutoRescrape(false);
-      setDropNoContact(true);
-      setAssignedTo("");
-      navigate(`/campaigns/${result.id}`);
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
+ async function handleSubmit(e: FormEvent) {
+  e.preventDefault();
+  
+  // Clean BOTH inputs before creating the payload
+  const cleanCities = normalizeAndDeduplicate(cities);
+  const cleanCategories = normalizeAndDeduplicate(categories);
+
+  try {
+    const payload: any = {
+      name,
+      sources,
+      cities: cleanCities,         // Cleaned array
+      categories: cleanCategories, // Cleaned array
+      auto_rescrape: autoRescrape,
+      drop_no_contact: dropNoContact,
+    };
+    
+    if (assignedTo) payload.assigned_to = assignedTo;
+    
+    // ... rest of your API call
+    
+    const result = await create.mutateAsync(payload);
+    toast.success("Campaign created");
+    
+    // Reset states
+    setShowForm(false);
+    setName("");
+    setCities("");
+    setCategories("");
+    setAutoRescrape(false);
+    setDropNoContact(true);
+    setAssignedTo("");
+    
+    navigate(`/campaigns/${result.id}`);
+  } catch (err) {
+    toast.error((err as Error).message);
   }
+}
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -159,8 +198,7 @@ export default function CampaignsPage() {
       {showForm && (
         <form
           onSubmit={handleSubmit}
-          // Skeuomorphic Form Container
-          className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 mb-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] space-y-6 animate-in slide-in-from-top-4 fade-in duration-300 relative overflow-hidden"
+          className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] p-6 sm:p-8 mb-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] space-y-6 animate-in slide-in-from-top-4 fade-in duration-300 relative overflow-visible"
         >
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-accent-start/5 blur-[100px] rounded-full pointer-events-none" />
 
@@ -182,46 +220,49 @@ export default function CampaignsPage() {
                 Target Cities <span className="text-zinc-500 font-normal ml-1">(comma separated)</span>
               </label>
               <input
-                value={cities}
-                onChange={(e) => setCities(e.target.value)}
-                required
-                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all"
-                placeholder="New York, Chicago, Miami"
-              />
+  value={cities}
+  onChange={(e) => setCities(e.target.value)}
+  onBlur={() => setCities(normalizeAndDeduplicate(cities).join(", "))} // <-- UX Magic here
+  required
+  className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all"
+  placeholder="New York, Chicago, Miami"
+/>
             </div>
             <div>
-              <label className="block text-sm font-bold text-zinc-300 mb-2">
-                Niche / Categories <span className="text-zinc-500 font-normal ml-1">(comma separated)</span>
-              </label>
-              <input
-                value={categories}
-                onChange={(e) => setCategories(e.target.value)}
-                required
-                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all"
-                placeholder="Plumbers, Restaurants, Dentists"
-              />
-            </div>
+  <label className="block text-sm font-bold text-zinc-300 mb-2">
+    Niche / Categories <span className="text-zinc-500 font-normal ml-1">(comma separated)</span>
+  </label>
+  <input
+    value={categories}
+    onChange={(e) => setCategories(e.target.value)}
+    // UX MAGIC: Auto-format and deduplicate on click-away
+    onBlur={() => setCategories(normalizeAndDeduplicate(categories).join(", "))} 
+    required
+    className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all"
+    placeholder="Plumbers, Restaurants, Dentists"
+  />
+</div>
           </div>
 
           {/* Assign to Employee (admin only) */}
           {role === "admin" && employees.length > 0 && (
-            <div className="relative z-10">
+            // FIX: Bumped z-index up to 50 so the dropdown breaks out and sits above the warning banner below it
+            <div className="relative z-50">
               <label className="block text-sm font-bold text-zinc-300 mb-2">
                 Assign to Employee <span className="text-zinc-500 font-normal ml-1">(optional)</span>
               </label>
-              <select
+              <CustomDropdown
                 value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all appearance-none"
-                style={{ colorScheme: "dark" }}
-              >
-                <option value="">-- Unassigned --</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.email})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setAssignedTo(val)}
+                placeholder="-- Unassigned --"
+                options={[
+                  { value: "", label: "-- Unassigned --" },
+                  ...employees.map(emp => ({
+                    value: emp.id,
+                    label: emp.name // Much cleaner, single-line UI
+                  }))
+                ]}
+              />
             </div>
           )}
 

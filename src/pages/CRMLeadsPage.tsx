@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { api } from "../api/client";
 import type { LeadActivity, PaginatedResponse } from "../types";
-import { ChevronDown, ChevronUp, Phone, Mail, Globe, ExternalLink, MapPin, Tag, ShieldCheck, Smartphone } from "lucide-react";
+import { ChevronDown, Phone, Mail, Globe, ExternalLink, MapPin, Tag, ShieldCheck, Smartphone, Search, X } from "lucide-react";
+import CustomDropdown from "../components/CustomDropdown";
 import Spinner from "../components/Spinner";
+import toast from "react-hot-toast";
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pending", color: "bg-yellow-500/20 text-yellow-400" },
   { value: "contacted", label: "Contacted", color: "bg-blue-500/20 text-blue-400" },
   { value: "follow_up", label: "Follow Up", color: "bg-purple-500/20 text-purple-400" },
-  { value: "interested", label: "Interested", color: "bg-green-500/20 text-green-400" },
   { value: "converted", label: "Converted", color: "bg-emerald-500/20 text-emerald-400" },
   { value: "not_interested", label: "Not Interested", color: "bg-red-500/20 text-red-400" },
   { value: "closed", label: "Closed", color: "bg-zinc-500/20 text-zinc-400" },
@@ -26,6 +27,9 @@ export default function CRMLeadsPage() {
   const [total, setTotal] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  
+  // Smart local search state
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchLeads = useCallback(() => {
     setLoading(true);
@@ -44,19 +48,33 @@ export default function CRMLeadsPage() {
     setUpdating(activityId);
     try {
       await api.patch(`/crm/leads/${activityId}`, updates);
+      toast.success("Lead updated successfully");
       fetchLeads();
     } catch (e: any) {
+      toast.error(e.message || "Failed to update lead");
       setError(e.message);
     } finally {
       setUpdating(null);
     }
   }
 
-  if (loading) {
+  // Filter current page's leads based on persistent search term
+  const filteredLeads = useMemo(() => {
+    if (!searchTerm.trim()) return leads;
+    const lowerTerm = searchTerm.toLowerCase();
+    return leads.filter((lead) => 
+      lead.business_name?.toLowerCase().includes(lowerTerm) ||
+      lead.email?.toLowerCase().includes(lowerTerm) ||
+      lead.phone_e164?.includes(searchTerm) ||
+      lead.city?.toLowerCase().includes(lowerTerm)
+    );
+  }, [leads, searchTerm]);
+
+  if (loading && leads.length === 0) {
     return <Spinner />;
   }
 
-  if (error) {
+  if (error && leads.length === 0) {
     return (
       <div className="p-6">
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400">
@@ -70,31 +88,54 @@ export default function CRMLeadsPage() {
 
   return (
     <div className="w-full animate-in fade-in duration-500 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">My Leads</h1>
           <p className="text-zinc-400 text-sm mt-1.5">{total} leads assigned to you</p>
+        </div>
+
+        {/* Local Page Search Input */}
+        <div className="relative w-full sm:w-72 group">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-orange-500 transition-colors" />
+          <input
+            type="text"
+            placeholder="Filter current page..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-zinc-900/80 border border-white/10 hover:border-white/20 rounded-xl pl-9 pr-9 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all shadow-sm"
+          />
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+              aria-label="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Table */}
       <div className="rounded-3xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[980px] text-sm">
+          {/* Locked table-layout fixed to prevent jumping headers */}
+          <table className="w-full min-w-[980px] text-sm table-fixed">
             <thead className="bg-black/30">
               <tr className="border-b border-white/5 text-zinc-400 text-left">
-                <th className="px-6 py-4 font-medium w-8"></th>
-                <th className="px-6 py-4 font-medium">Business</th>
-                <th className="px-6 py-4 font-medium">Phone</th>
-                <th className="px-6 py-4 font-medium">Email</th>
-                <th className="px-6 py-4 font-medium">City</th>
-                <th className="px-6 py-4 font-medium">Category</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Follow Up</th>
+                {/* Explicit widths */}
+                <th className="px-6 py-4 font-medium w-12"></th>
+                <th className="px-6 py-4 font-medium w-[22%]">Business</th>
+                <th className="px-6 py-4 font-medium w-[15%]">Phone</th>
+                <th className="px-6 py-4 font-medium w-[18%]">Email</th>
+                <th className="px-6 py-4 font-medium w-[12%]">City</th>
+                <th className="px-6 py-4 font-medium w-[10%]">Category</th>
+                <th className="px-6 py-4 font-medium w-[10%]">Status</th>
+                <th className="px-6 py-4 font-medium w-[15%]">Follow Up</th>
               </tr>
             </thead>
             <tbody>
-              {leads.map((lead) => (
+              {filteredLeads.map((lead) => (
                 <LeadRow
                   key={lead.activity_id}
                   lead={lead}
@@ -104,10 +145,37 @@ export default function CRMLeadsPage() {
                   updating={updating === lead.activity_id}
                 />
               ))}
+
+              {/* True empty state */}
               {leads.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-6 py-20 text-center text-zinc-500">
                     No leads assigned yet. Ask your admin to assign a campaign.
+                  </td>
+                </tr>
+              )}
+
+              {/* Local search empty state */}
+              {leads.length > 0 && filteredLeads.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Search size={28} className="text-zinc-600" />
+                      <div>
+                        <p className="text-zinc-400 font-medium">No matches found on Page {page}</p>
+                        <p className="text-zinc-500 text-xs mt-1">
+                          Try checking the next page or clear your filter.
+                        </p>
+                      </div>
+                      {page < totalPages && (
+                        <button
+                          onClick={() => setPage((p) => p + 1)}
+                          className="mt-2 px-4 py-1.5 text-xs font-semibold rounded-lg bg-white/5 hover:bg-white/10 text-white transition-colors"
+                        >
+                          Check Page {page + 1}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}
@@ -161,36 +229,40 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
   return (
     <>
       <tr
-        className="border-b border-white/5 hover:bg-white/[0.02] cursor-pointer transition-colors"
+        className={`hover:bg-white/[0.02] cursor-pointer transition-colors ${
+          expanded ? "bg-white/[0.02] border-transparent" : "border-b border-white/5"
+        }`}
         onClick={onToggle}
       >
         <td className="px-6 py-4">
-          {expanded ? <ChevronUp size={14} className="text-zinc-500" /> : <ChevronDown size={14} className="text-zinc-500" />}
+          <div className={`transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}>
+            <ChevronDown size={16} className="text-zinc-500" />
+          </div>
         </td>
-        <td className="px-6 py-4 font-medium text-white">{lead.business_name}</td>
-        <td className="px-6 py-4">
+        <td className="px-6 py-4 font-medium text-white truncate">{lead.business_name}</td>
+        <td className="px-6 py-4 truncate">
           {lead.phone_e164 ? (
-            <a href={`tel:${lead.phone_e164}`} onClick={(e) => e.stopPropagation()} className="text-cyan-400 hover:underline flex items-center gap-1">
-              <Phone size={12} /> {lead.phone_e164}
+            <a href={`tel:${lead.phone_e164}`} onClick={(e) => e.stopPropagation()} className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1.5 transition-colors">
+              <Phone size={12} className="shrink-0" /> <span className="truncate">{lead.phone_e164}</span>
             </a>
           ) : (
             <span className="text-zinc-600">—</span>
           )}
         </td>
-        <td className="px-6 py-4">
+        <td className="px-6 py-4 truncate">
           {lead.email ? (
-            <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-orange-400 hover:underline flex items-center gap-1">
-              <Mail size={12} /> {lead.email}
+            <a href={`mailto:${lead.email}`} onClick={(e) => e.stopPropagation()} className="text-orange-400 hover:text-orange-300 hover:underline flex items-center gap-1.5 transition-colors">
+              <Mail size={12} className="shrink-0" /> <span className="truncate">{lead.email}</span>
             </a>
           ) : (
             <span className="text-zinc-600">—</span>
           )}
         </td>
-        <td className="px-6 py-4 text-zinc-300">{lead.city}</td>
-        <td className="px-6 py-4 text-zinc-300">{lead.category}</td>
+        <td className="px-6 py-4 text-zinc-300 truncate">{lead.city}</td>
+        <td className="px-6 py-4 text-zinc-300 truncate capitalize">{lead.category}</td>
         <td className="px-6 py-4">
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusStyle(lead.status)}`}>
-            {lead.status}
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap tracking-wide ${getStatusStyle(lead.status)}`}>
+            {lead.status.replace("_", " ")}
           </span>
         </td>
         <td className="px-6 py-4 text-zinc-400 text-xs">
@@ -198,136 +270,195 @@ function LeadRow({ lead, expanded, onToggle, onUpdate, updating }: LeadRowProps)
         </td>
       </tr>
 
-      {/* Expanded Details */}
-      {expanded && (
-        <tr className="border-b border-white/5 bg-[#050505]">
-          <td colSpan={8} className="px-8 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Lead Info */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wide">Lead Details</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-zinc-300">
-                    <Globe size={14} className="text-zinc-500" />
-                    {lead.website_url ? (
-                      <a href={lead.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center gap-1">
-                        {lead.website_url} <ExternalLink size={10} />
-                      </a>
-                    ) : (
-                      <span className="text-zinc-600">No website</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-zinc-300">
-                    <MapPin size={14} className="text-zinc-500" />
-                    <span>{lead.city}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-zinc-300">
-                    <Tag size={14} className="text-zinc-500" />
-                    <span>{lead.category}</span>
-                  </div>
-                  {lead.has_ssl !== null && (
-                    <div className="flex items-center gap-2 text-zinc-300">
-                      <ShieldCheck size={14} className={lead.has_ssl ? "text-green-400" : "text-red-400"} />
-                      <span>SSL: {lead.has_ssl ? "Yes" : "No"}</span>
-                    </div>
-                  )}
-                  {lead.is_mobile_friendly !== null && (
-                    <div className="flex items-center gap-2 text-zinc-300">
-                      <Smartphone size={14} className={lead.is_mobile_friendly ? "text-green-400" : "text-red-400"} />
-                      <span>Mobile Friendly: {lead.is_mobile_friendly ? "Yes" : "No"}</span>
-                    </div>
-                  )}
-                  {lead.source?.length > 0 && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {lead.source.map((s) => (
-                        <a
-                          key={s}
-                          href={
-                            s === "google_maps" ? `https://www.google.com/maps/search/${encodeURIComponent(lead.business_name + " " + lead.city)}` :
-                            s === "google" ? `https://www.google.com/search?q=${encodeURIComponent(lead.business_name + " " + lead.city)}` :
-                            undefined
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`px-2 py-0.5 bg-zinc-800 text-xs rounded-full ${
-                            s === "google_maps" || s === "google" ? "text-blue-400 hover:underline cursor-pointer" : "text-zinc-400"
-                          }`}
-                        >
-                          {s}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+      {/* Smooth Animated Expanded Details */}
+      <tr>
+        <td colSpan={8} className="p-0 border-none">
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-black/40 border-b border-white/5 shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
+                {/* Fluid layout matching History page */}
+                <div className="w-full px-6 py-8 md:px-12 lg:px-16">
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
+                    
+                    {/* Left Column: Lead Info */}
+                    <div className="lg:col-span-5 space-y-6">
+                      <div>
+                        <h4 className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <span className="w-8 h-px bg-white/10"></span>
+                          Lead Intelligence
+                        </h4>
+                        <div className="space-y-3.5 text-sm bg-white/[0.01] border border-white/5 rounded-2xl p-5 md:p-6">
+                          <div className="flex items-center gap-3 text-zinc-300 group min-w-0">
+                            <div className="p-1.5 rounded-md bg-white/5 text-zinc-500 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors shrink-0">
+                              <Globe size={14} />
+                            </div>
+                            {lead.website_url ? (
+                              <div className="min-w-0 flex-1">
+                                <a 
+                                  href={lead.website_url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-zinc-300 hover:text-blue-400 hover:underline flex items-center gap-1.5 transition-colors truncate block"
+                                  title={lead.website_url}
+                                >
+                                  {lead.website_url} <ExternalLink size={10} className="shrink-0 inline-block" />
+                                </a>
+                              </div>
+                            ) : (
+                              <span className="text-zinc-600 italic">No website available</span>
+                            )}
+                          </div>
 
-              {/* Update Form */}
-              <div className="space-y-3">
-                <h4 className="text-xs font-extrabold text-zinc-400 uppercase tracking-wide">Update Activity</h4>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm text-zinc-400 block mb-1">Status</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value)}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
-                    >
-                      {STATUS_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
+                          <div className="flex items-center gap-3 text-zinc-300">
+                            <div className="p-1.5 rounded-md bg-white/5 text-zinc-500 shrink-0">
+                              <MapPin size={14} />
+                            </div>
+                            <span>{lead.city || <span className="text-zinc-600 italic">Unknown Location</span>}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-zinc-300">
+                            <div className="p-1.5 rounded-md bg-white/5 text-zinc-500 shrink-0">
+                              <Tag size={14} />
+                            </div>
+                            <span className="capitalize">{lead.category || <span className="text-zinc-600 italic">Uncategorized</span>}</span>
+                          </div>
+
+                          {lead.has_ssl !== null && (
+                            <div className="flex items-center gap-3 text-zinc-300">
+                              <div className={`p-1.5 rounded-md bg-white/5 shrink-0 ${lead.has_ssl ? "text-green-400" : "text-red-400"}`}>
+                                <ShieldCheck size={14} />
+                              </div>
+                              <span>SSL Certificate: <span className={lead.has_ssl ? "text-zinc-300" : "text-zinc-500"}>{lead.has_ssl ? "Secured" : "Not Secured"}</span></span>
+                            </div>
+                          )}
+
+                          {lead.is_mobile_friendly !== null && (
+                            <div className="flex items-center gap-3 text-zinc-300">
+                              <div className={`p-1.5 rounded-md bg-white/5 shrink-0 ${lead.is_mobile_friendly ? "text-green-400" : "text-red-400"}`}>
+                                <Smartphone size={14} />
+                              </div>
+                              <span>Mobile Friendly: <span className={lead.is_mobile_friendly ? "text-zinc-300" : "text-zinc-500"}>{lead.is_mobile_friendly ? "Yes" : "No"}</span></span>
+                            </div>
+                          )}
+
+                          {lead.source?.length > 0 && (
+                            <div className="pt-3 mt-3 border-t border-white/5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs text-zinc-500 mr-1">Sources:</span>
+                                {lead.source.map((s) => (
+                                  <a
+                                    key={s}
+                                    href={
+                                      s === "google_maps" ? `https://www.google.com/maps/search/${encodeURIComponent(lead.business_name + " " + lead.city)}` :
+                                      s === "google" ? `https://www.google.com/search?q=${encodeURIComponent(lead.business_name + " " + lead.city)}` :
+                                      undefined
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className={`px-2.5 py-1 bg-zinc-800/50 border border-zinc-700/50 text-[11px] font-medium rounded-md transition-colors ${
+                                      s === "google_maps" || s === "google" ? "text-blue-400 hover:bg-zinc-800 hover:text-blue-300 cursor-pointer" : "text-zinc-300"
+                                    }`}
+                                  >
+                                    {s}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Update Form */}
+                    <div className="lg:col-span-7">
+                      <h4 className="text-[11px] font-bold text-zinc-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <span className="w-8 h-px bg-white/10"></span>
+                        Activity Log
+                      </h4>
+                      <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-5 md:p-6 shadow-sm">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                          <div className="md:col-span-2 max-w-sm">
+                            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide block mb-2">Status</label>
+                            <CustomDropdown
+                              value={status}
+                              onChange={(val) => setStatus(val)}
+                              options={STATUS_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide block mb-2">Notes</label>
+                            <textarea
+                              value={notes}
+                              onChange={(e) => setNotes(e.target.value)}
+                              rows={3}
+                              className="w-full bg-black/50 border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all resize-none"
+                              placeholder="Add context, conversation details, or specific requirements..."
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide block mb-2">Next Action</label>
+                            <input
+                              type="text"
+                              value={nextAction}
+                              onChange={(e) => setNextAction(e.target.value)}
+                              className="w-full bg-black/50 border border-white/10 hover:border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                              placeholder="e.g. Call back, Send proposal..."
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wide block mb-2">Next Follow Up</label>
+                            <input
+                              type="datetime-local"
+                              value={nextFollowUp}
+                              onChange={(e) => setNextFollowUp(e.target.value)}
+                              style={{ colorScheme: "dark" }}
+                              className="w-full bg-black/50 border border-white/10 hover:border-white/20 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/50 transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex justify-end pt-5 border-t border-white/5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpdate(lead.activity_id, {
+                                status,
+                                notes: notes || null,
+                                next_action: nextAction || null,
+                                next_follow_up: nextFollowUp ? new Date(nextFollowUp).toISOString() : null,
+                              });
+                            }}
+                            disabled={updating}
+                            className="px-6 py-2.5 bg-orange-500 hover:bg-orange-400 disabled:opacity-50 disabled:hover:bg-orange-500 text-white text-sm font-semibold rounded-xl shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all flex items-center justify-center min-w-[140px]"
+                          >
+                            {updating ? (
+                              <span className="flex items-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                Saving...
+                              </span>
+                            ) : (
+                              "Save Changes"
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 block mb-1">Notes</label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      rows={2}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50 resize-none"
-                      placeholder="Add notes about this lead..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 block mb-1">Next Action</label>
-                    <input
-                      type="text"
-                      value={nextAction}
-                      onChange={(e) => setNextAction(e.target.value)}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
-                      placeholder="e.g. Call back, Send proposal..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 block mb-1">Next Follow Up</label>
-                    <input
-                      type="datetime-local"
-                      value={nextFollowUp}
-                      onChange={(e) => setNextFollowUp(e.target.value)}
-                      style={{ colorScheme: "dark" }}
-                      className="w-full bg-zinc-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-orange-500/50"
-                    />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onUpdate(lead.activity_id, {
-                        status,
-                        notes: notes || null,
-                        next_action: nextAction || null,
-                        next_follow_up: nextFollowUp ? new Date(nextFollowUp).toISOString() : null,
-                      });
-                    }}
-                    disabled={updating}
-                    className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-colors"
-                  >
-                    {updating ? "Saving..." : "Save Changes"}
-                  </button>
                 </div>
               </div>
             </div>
-          </td>
-        </tr>
-      )}
+          </div>
+        </td>
+      </tr>
     </>
   );
 }

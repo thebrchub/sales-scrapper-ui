@@ -14,6 +14,7 @@ import {
   Settings,
   UserCheck
 } from "lucide-react";
+import CustomDropdown from "../components/CustomDropdown";
 import { useCampaignStatus } from "../hooks/useApi";
 import { getUserRole } from "../hooks/useRole";
 import { api } from "../api/client";
@@ -266,19 +267,18 @@ export default function CampaignDetailPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
             <div className="flex-1 w-full sm:w-auto">
               <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Employee</label>
-              <select
+              <CustomDropdown
                 value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all appearance-none"
-                style={{ colorScheme: "dark" }}
-              >
-                <option value="">-- Select Employee --</option>
-                {employees.map((emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.email})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setAssignedTo(val)}
+                placeholder="-- Select Employee --"
+                options={[
+                  { value: "", label: "-- Select Employee --" },
+                  ...employees.map(emp => ({
+                    value: emp.id,
+                    label: `${emp.name} (${emp.email})`
+                  }))
+                ]}
+              />
             </div>
             <button
               onClick={handleAssign}

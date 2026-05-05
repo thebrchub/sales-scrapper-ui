@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Download, ExternalLink, Search, Filter, ChevronDown, FastForward, UserPlus, Phone, Mail } from "lucide-react";
+import { Download, ExternalLink, Search, Filter, FastForward, UserPlus, Phone, Mail, X } from "lucide-react";
 import { useLeads, useUpdateLead } from "../hooks/useApi";
 import { api, getExportUrl, getToken } from "../api/client";
 import { getUserRole } from "../hooks/useRole";
@@ -13,68 +13,17 @@ import ErrorBox from "../components/ErrorBox";
 import Tooltip from "../components/Tooltip";
 import toast from "react-hot-toast";
 
-// --- CUSTOM PREMIUM DROPDOWN COMPONENT (Skeuomorphic) ---
-function CustomDropdown({ 
-  value, 
-  options, 
-  onChange, 
-  placeholder = "Select...", 
-  align = "left",
-  size = "md" 
-}: {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (val: string) => void;
-  placeholder?: string;
-  align?: "left" | "right";
-  size?: "md" | "sm";
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const selectedLabel = options.find(o => o.value === value)?.label || placeholder;
+import CustomDropdown from "../components/CustomDropdown";
 
-  return (
-    <div className="relative inline-block text-left w-full sm:w-auto">
-      <button
-        type="button"
-        onClick={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
-        // Skeuomorphic Recessed Button
-        className={`flex items-center justify-between w-full min-w-[130px] rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] text-zinc-300 hover:text-accent-start focus:border-accent-start/50 transition-colors outline-none ${
-          size === "sm" ? "px-3 py-1.5 text-xs font-bold" : "px-4 py-3 text-sm font-bold"
-        }`}
-      >
-        <span className="truncate">{selectedLabel}</span>
-        <ChevronDown size={size === "sm" ? 14 : 16} className={`ml-2 shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180 text-accent-start" : "text-zinc-500"}`} />
-      </button>
-
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} />
-          
-          <div className={`absolute ${align === "right" ? "right-0" : "left-0"} top-full mt-2 min-w-[140px] rounded-2xl border border-white/5 border-t-white/10 bg-gradient-to-b from-[#18181b] to-[#09090b] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_20px_40px_rgba(0,0,0,0.6)] z-50 py-2 animate-in fade-in slide-in-from-top-2 duration-200`}>
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className={`flex w-full items-center px-4 py-2 transition-colors font-semibold ${size === "sm" ? "text-xs" : "text-sm"} ${
-                  value === opt.value
-                    ? "bg-accent-start/10 text-accent-start border-l-2 border-accent-start"
-                    : "text-zinc-400 hover:bg-white/5 hover:text-white border-l-2 border-transparent"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+// Helper function to handle case-sensitivity issues from the backend.
+// Formats strings like "new york" to "New York"
+const toTitleCase = (str: string) => {
+  return str
+    .trim()
+    .split(" ")
+    .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : "")
+    .join(" ");
+};
 
 export default function LeadsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -170,8 +119,15 @@ export default function LeadsPage() {
     setSearchParams(newParams);
   }
 
+  // UX Improvement: Normalize city name before updating parameters
   function applyCity() {
-    updateURLParams("city", cityInput);
+    if (!cityInput.trim()) {
+      updateURLParams("city", "");
+      return;
+    }
+    const formattedCity = toTitleCase(cityInput);
+    setCityInput(formattedCity); // Visually snap the input to the correct casing
+    updateURLParams("city", formattedCity); // Send clean data to backend
   }
 
   function handleJumpSubmit(e: React.FormEvent) {
@@ -346,18 +302,43 @@ export default function LeadsPage() {
             ]}
           />
 
-          {/* Skeuomorphic Search Input Group */}
-          <div className="flex w-full sm:w-auto flex-1 max-w-md rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] p-1 relative">
+          {/* Skeuomorphic Search Input Group - UX IMPROVED */}
+          <div className="flex items-center w-full sm:w-auto flex-1 max-w-md rounded-xl bg-[#09090b] border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] p-1 relative">
             <input
               value={cityInput}
-              onChange={(e) => setCityInput(e.target.value)}
+              onChange={(e) => {
+                setCityInput(e.target.value);
+                // UX: Automatically clear the filter if the user backspaces until empty
+                if (e.target.value.trim() === "") {
+                  updateURLParams("city", "");
+                }
+              }}
+              // UX: Automatically correct capitalization when user clicks away
+              onBlur={() => {
+                if (cityInput.trim()) {
+                  setCityInput(toTitleCase(cityInput));
+                }
+              }}
               onKeyDown={(e) => e.key === "Enter" && applyCity()}
               placeholder="Filter by City..."
-              className="w-full bg-transparent px-4 py-2 text-sm font-bold text-white placeholder:text-zinc-600 outline-none"
+              className="w-full bg-transparent pl-4 pr-2 py-2 text-sm font-bold text-white placeholder:text-zinc-600 outline-none"
             />
+            {/* UX: Clear Search Button */}
+            {cityInput && (
+              <button
+                onClick={() => {
+                  setCityInput("");
+                  updateURLParams("city", "");
+                }}
+                className="p-1.5 mr-1 text-zinc-500 hover:text-white transition-colors rounded-lg hover:bg-white/5 cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X size={14} />
+              </button>
+            )}
             <button
               onClick={applyCity}
-              className="group relative px-3 py-2 rounded-lg bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_4px_rgba(0,0,0,0.3)] text-zinc-400 hover:text-accent-start transition-colors cursor-pointer flex items-center justify-center"
+              className="group relative shrink-0 px-3 py-2 rounded-lg bg-[#121214] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_2px_4px_rgba(0,0,0,0.3)] text-zinc-400 hover:text-accent-start transition-colors cursor-pointer flex items-center justify-center"
               aria-label="Search city"
             >
               <Search size={16} />
