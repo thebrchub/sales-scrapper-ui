@@ -30,6 +30,7 @@ interface SimpleEmployee {
 }
 
 export default function CampaignsPage() {
+  const MAX_CITIES = 2;
   const [searchParams, setSearchParams] = useSearchParams();
   const [lastVisitedId, setLastVisitedId] = useState<string | null>(null);
 
@@ -75,7 +76,7 @@ export default function CampaignsPage() {
 
   // Helper function to normalize and deduplicate tags (Cities/Categories)
 // Helper function to normalize and deduplicate ANY comma-separated tags
-const normalizeAndDeduplicate = (input: string): string[] => {
+const normalizeAndDeduplicate = (input: string, maxItems?: number): string[] => {
   const uniqueItems = new Map<string, string>();
   
   input.split(",").forEach((item) => {
@@ -90,7 +91,7 @@ const normalizeAndDeduplicate = (input: string): string[] => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(" ");
 
-      if (!uniqueItems.has(lowerKey)) {
+      if (!uniqueItems.has(lowerKey) && (!maxItems || uniqueItems.size < maxItems)) {
         uniqueItems.set(lowerKey, titleCased);
       }
     }
@@ -109,6 +110,7 @@ const normalizeAndDeduplicate = (input: string): string[] => {
 
   const campaigns = data?.data || [];
   const meta = data?.meta;
+  const uniqueCityCount = normalizeAndDeduplicate(cities).length;
 
   useEffect(() => {
     if (lastVisitedId && campaigns.length > 0) {
@@ -136,8 +138,15 @@ const normalizeAndDeduplicate = (input: string): string[] => {
   e.preventDefault();
   
   // Clean BOTH inputs before creating the payload
-  const cleanCities = normalizeAndDeduplicate(cities);
+  const allUniqueCities = normalizeAndDeduplicate(cities);
+  const cleanCities = normalizeAndDeduplicate(cities, MAX_CITIES);
   const cleanCategories = normalizeAndDeduplicate(categories);
+
+  if (allUniqueCities.length > MAX_CITIES) {
+    toast.error(`You can add at most ${MAX_CITIES} cities per campaign.`);
+    setCities(cleanCities.join(", "));
+    return;
+  }
 
   try {
     const payload: any = {
@@ -239,16 +248,19 @@ const normalizeAndDeduplicate = (input: string): string[] => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 relative z-10">
             <div>
               <label className="block text-sm font-bold text-zinc-300 mb-2">
-                Target Cities <span className="text-zinc-500 font-normal ml-1">(comma separated)</span>
+                Target Cities <span className="text-zinc-500 font-normal ml-1">(comma separated, max {MAX_CITIES})</span>
               </label>
               <input
   value={cities}
   onChange={(e) => setCities(e.target.value)}
-  onBlur={() => setCities(normalizeAndDeduplicate(cities).join(", "))} // <-- UX Magic here
+  onBlur={() => setCities(normalizeAndDeduplicate(cities, MAX_CITIES).join(", "))}
   required
   className="w-full rounded-xl border border-white/5 bg-[#09090b] shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)] px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:bg-[#0c0c0e] focus:border-accent-start/50 transition-all"
-  placeholder="New York, Chicago, Miami"
+  placeholder="New York, Chicago"
 />
+              <p className={`mt-1 text-xs ${uniqueCityCount > MAX_CITIES ? "text-amber-300" : "text-zinc-500"}`}>
+                {uniqueCityCount}/{MAX_CITIES} cities selected
+              </p>
             </div>
             <div>
   <label className="block text-sm font-bold text-zinc-300 mb-2">
